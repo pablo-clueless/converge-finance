@@ -578,7 +578,7 @@ func (s *AssetService) CancelTransfer(ctx context.Context, transferID common.ID)
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "fa.transfer", transfer.ID, "cancelled", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "fa.transfer", transfer.ID, "cancelled", map[string]any{
 			"transfer_number": transfer.TransferNumber,
 		})
 	}

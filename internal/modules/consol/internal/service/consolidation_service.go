@@ -17,17 +17,17 @@ import (
 )
 
 type ConsolidationService struct {
-	db                  *database.PostgresDB
-	setRepo             repository.ConsolidationSetRepository
-	runRepo             repository.ConsolidationRunRepository
-	entityBalanceRepo   repository.EntityBalanceRepository
-	consolidatedRepo    repository.ConsolidatedBalanceRepository
-	minorityRepo        repository.MinorityInterestRepository
-	rateRepo            repository.ExchangeRateRepository
-	translationAdjRepo  repository.TranslationAdjustmentRepository
-	glAPI               gl.API
-	icAPI               ic.API
-	auditLogger         *audit.Logger
+	db                 *database.PostgresDB
+	setRepo            repository.ConsolidationSetRepository
+	runRepo            repository.ConsolidationRunRepository
+	entityBalanceRepo  repository.EntityBalanceRepository
+	consolidatedRepo   repository.ConsolidatedBalanceRepository
+	minorityRepo       repository.MinorityInterestRepository
+	rateRepo           repository.ExchangeRateRepository
+	translationAdjRepo repository.TranslationAdjustmentRepository
+	glAPI              gl.API
+	icAPI              ic.API
+	auditLogger        *audit.Logger
 }
 
 func NewConsolidationService(
@@ -44,17 +44,17 @@ func NewConsolidationService(
 	auditLogger *audit.Logger,
 ) *ConsolidationService {
 	return &ConsolidationService{
-		db:                  db,
-		setRepo:             setRepo,
-		runRepo:             runRepo,
-		entityBalanceRepo:   entityBalanceRepo,
-		consolidatedRepo:    consolidatedRepo,
-		minorityRepo:        minorityRepo,
-		rateRepo:            rateRepo,
-		translationAdjRepo:  translationAdjRepo,
-		glAPI:               glAPI,
-		icAPI:               icAPI,
-		auditLogger:         auditLogger,
+		db:                 db,
+		setRepo:            setRepo,
+		runRepo:            runRepo,
+		entityBalanceRepo:  entityBalanceRepo,
+		consolidatedRepo:   consolidatedRepo,
+		minorityRepo:       minorityRepo,
+		rateRepo:           rateRepo,
+		translationAdjRepo: translationAdjRepo,
+		glAPI:              glAPI,
+		icAPI:              icAPI,
+		auditLogger:        auditLogger,
 	}
 }
 
@@ -75,7 +75,7 @@ func (s *ConsolidationService) CreateConsolidationSet(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "consol.set", set.ID, "created", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "consol.set", set.ID, "created", map[string]any{
 			"set_code":           set.SetCode,
 			"set_name":           set.SetName,
 			"reporting_currency": set.ReportingCurrency.Code,
@@ -110,10 +110,10 @@ func (s *ConsolidationService) AddMemberToSet(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "consol.set_member", member.ID, "added", map[string]any{
-			"set_id":              setID,
-			"entity_id":           entityID,
-			"ownership_percent":   ownershipPercent,
+		_ = s.auditLogger.LogAction(ctx, "consol.set_member", member.ID, "added", map[string]any{
+			"set_id":               setID,
+			"entity_id":            entityID,
+			"ownership_percent":    ownershipPercent,
 			"consolidation_method": consolidationMethod,
 		})
 	}
@@ -162,9 +162,9 @@ func (s *ConsolidationService) InitiateConsolidationRun(
 
 	if s.auditLogger != nil {
 		s.auditLogger.LogAction(ctx, "consol.run", run.ID, "initiated", map[string]any{
-			"run_number":        run.RunNumber,
-			"set_id":            setID,
-			"fiscal_period_id":  fiscalPeriodID,
+			"run_number":         run.RunNumber,
+			"set_id":             setID,
+			"fiscal_period_id":   fiscalPeriodID,
 			"consolidation_date": consolidationDate,
 		})
 	}
@@ -240,9 +240,9 @@ func (s *ConsolidationService) ExecuteConsolidation(ctx context.Context, runID c
 
 	if s.auditLogger != nil {
 		s.auditLogger.LogAction(ctx, "consol.run", run.ID, "completed", map[string]any{
-			"entity_count":  run.EntityCount,
-			"total_assets":  run.TotalAssets,
-			"net_income":    run.NetIncome,
+			"entity_count": run.EntityCount,
+			"total_assets": run.TotalAssets,
+			"net_income":   run.NetIncome,
 		})
 	}
 
