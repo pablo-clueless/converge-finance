@@ -1,0 +1,112 @@
+name: CI
+on:
+  push:
+    branches: [ main, deploy ]
+  pull_request:
+    branches: [ main, deploy ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: converge
+          POSTGRES_PASSWORD: converge
+          POSTGRES_DB: converge_finance 
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.0'
+        
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+          
+    - name: Create test environment file
+      run: |
+        cat > .env << EOF
+        DATABASE_URL=postgres://converge:converge@localhost:5432/converge_finance?sslmode=disable
+        GRPC_PORT=9090
+        HTTP_PORT=8080
+        POSTGRES_USER=converge
+        POSTGRES_PASSWORD=converge
+        POSTGRES_DB=converge_finance
+        EOF
+        
+    - name: Install dependencies
+      run: go mod download
+      
+    - name: Run unit tests
+      run: go test -v ./src/...
+      
+    - name: Run e2e tests
+      run: go test -v ./tests/...
+      env:
+        DATABASE_URL: postgres://converge:converge@localhost:5432/converge_finance?sslmode=disable
+        GRPC_PORT: 9090
+        HTTP_PORT: 8080
+        POSTGRES_USER: converge
+        POSTGRES_PASSWORD: converge
+        POSTGRES_DB: converge_finance
+      
+    - name: Build application
+      run: go build -v ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.0'
+        
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v9
+      with:
+        version: latest
+        args: --timeout=5m
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.0'
+        
+    - name: Run Gosec Security Scanner
+      uses: securego/gosec@master
+      with:
+        args: '-no-fail -fmt sarif -out results.sarif ./...'
+      env:
+        GOFLAGS: '-buildvcs=false'
