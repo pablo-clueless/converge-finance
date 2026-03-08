@@ -86,11 +86,14 @@ func (s *EliminationService) CreateRule(ctx context.Context, req CreateRuleReque
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.elimination_rule", rule.ID, "created", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.elimination_rule", rule.ID, "created", map[string]any{
 			"rule_code":        rule.RuleCode,
 			"rule_name":        rule.RuleName,
 			"elimination_type": rule.EliminationType,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to log posted run action: %w", err)
+		}
 	}
 
 	return rule, nil
@@ -435,9 +438,12 @@ func (s *EliminationService) ReverseEliminationRun(ctx context.Context, runID co
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.elimination_run", run.ID, "reversed", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.elimination_run", run.ID, "reversed", map[string]any{
 			"run_number": run.RunNumber,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to log posted run action: %w", err)
+		}
 	}
 
 	return run, nil
@@ -491,9 +497,12 @@ func (s *EliminationService) DeleteEliminationRun(ctx context.Context, runID com
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.elimination_run", run.ID, "deleted", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.elimination_run", run.ID, "deleted", map[string]any{
 			"run_number": run.RunNumber,
 		})
+		if err != nil {
+			return fmt.Errorf("failed to log posted run action: %w", err)
+		}
 	}
 
 	return nil

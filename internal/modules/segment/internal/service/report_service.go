@@ -253,10 +253,13 @@ func (s *ReportService) FinalizeReport(ctx context.Context, id common.ID) (*doma
 		return nil, fmt.Errorf("failed to update report: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_report", id, "report.finalized", map[string]any{
+	err = s.auditLogger.Log(ctx, "segment_report", id, "report.finalized", map[string]any{
 		"entity_id":     report.EntityID,
 		"report_number": report.ReportNumber,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return report, nil
 }
@@ -275,10 +278,13 @@ func (s *ReportService) ApproveReport(ctx context.Context, id common.ID) (*domai
 		return nil, fmt.Errorf("failed to update report: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_report", id, "report.approved", map[string]any{
+	err = s.auditLogger.Log(ctx, "segment_report", id, "report.approved", map[string]any{
 		"entity_id":     report.EntityID,
 		"report_number": report.ReportNumber,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return report, nil
 }
@@ -297,10 +303,13 @@ func (s *ReportService) PublishReport(ctx context.Context, id common.ID) (*domai
 		return nil, fmt.Errorf("failed to update report: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_report", id, "report.published", map[string]any{
+	err = s.auditLogger.Log(ctx, "segment_report", id, "report.published", map[string]any{
 		"entity_id":     report.EntityID,
 		"report_number": report.ReportNumber,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return report, nil
 }
