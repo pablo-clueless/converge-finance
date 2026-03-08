@@ -332,10 +332,12 @@ func (s *ReportService) DeleteReport(ctx context.Context, id common.ID) error {
 		return fmt.Errorf("failed to delete report: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_report", id, "report.deleted", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment_report", id, "report.deleted", map[string]any{
 		"entity_id":     report.EntityID,
 		"report_number": report.ReportNumber,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -414,10 +416,12 @@ func (s *ReportService) RegenerateReportData(ctx context.Context, id common.ID) 
 
 	report.Data = reportData
 
-	s.auditLogger.Log(ctx, "segment_report", id, "report.regenerated", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment_report", id, "report.regenerated", map[string]any{
 		"entity_id":     report.EntityID,
 		"report_number": report.ReportNumber,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return report, nil
 }

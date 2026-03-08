@@ -134,14 +134,16 @@ func (s *DocumentService) Upload(ctx context.Context, req UploadRequest, fileRea
 		return nil, fmt.Errorf("failed to create document: %w", err)
 	}
 
-	_ = s.auditLogger.Log(ctx, "document", doc.ID, "uploaded", map[string]any{
+	if err := s.auditLogger.Log(ctx, "document", doc.ID, "uploaded", map[string]any{
 		"entity_id":       req.EntityID,
 		"uploaded_by":     req.UploadedBy,
 		"document_number": doc.DocumentNumber,
 		"file_name":       req.FileName,
 		"file_size":       req.FileSize,
 		"document_type":   req.DocumentType,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return doc, nil
 }
@@ -251,12 +253,14 @@ func (s *DocumentService) Attach(ctx context.Context, documentID common.ID, refT
 		return nil, fmt.Errorf("failed to create attachment: %w", err)
 	}
 
-	_ = s.auditLogger.Log(ctx, "document", documentID, "attached", map[string]any{
+	if err := s.auditLogger.Log(ctx, "document", documentID, "attached", map[string]any{
 		"entity_id":      doc.EntityID,
 		"attached_by":    attachedBy,
 		"reference_type": refType,
 		"reference_id":   refID.String(),
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return attachment, nil
 }
@@ -271,12 +275,14 @@ func (s *DocumentService) Detach(ctx context.Context, documentID common.ID, refT
 		return err
 	}
 
-	_ = s.auditLogger.Log(ctx, "document", documentID, "detached", map[string]any{
+	if err := s.auditLogger.Log(ctx, "document", documentID, "detached", map[string]any{
 		"entity_id":      doc.EntityID,
 		"detached_by":    detachedBy,
 		"reference_type": refType,
 		"reference_id":   refID.String(),
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -316,12 +322,14 @@ func (s *DocumentService) SetLegalHold(ctx context.Context, documentID common.ID
 		action = "document.legal_hold_removed"
 	}
 
-	_ = s.auditLogger.Log(ctx, "document", documentID, action, map[string]any{
+	if err := s.auditLogger.Log(ctx, "document", documentID, action, map[string]any{
 		"entity_id":  doc.EntityID,
 		"user_id":    userID,
 		"legal_hold": hold,
 		"reason":     reason,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -340,10 +348,12 @@ func (s *DocumentService) ArchiveDocument(ctx context.Context, documentID common
 		return err
 	}
 
-	_ = s.auditLogger.Log(ctx, "document", documentID, "archived", map[string]any{
+	if err := s.auditLogger.Log(ctx, "document", documentID, "archived", map[string]any{
 		"entity_id": doc.EntityID,
 		"user_id":   userID,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -362,10 +372,12 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID common.
 		return err
 	}
 
-	_ = s.auditLogger.Log(ctx, "document", documentID, "deleted", map[string]any{
+	if err := s.auditLogger.Log(ctx, "document", documentID, "deleted", map[string]any{
 		"entity_id": doc.EntityID,
 		"user_id":   userID,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }

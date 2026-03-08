@@ -68,11 +68,14 @@ func (s *CashFlowService) ConfigureAccountCashFlow(
 			return nil, fmt.Errorf("failed to update account cash flow config: %w", err)
 		}
 
-		s.auditLogger.Log(ctx, "account_cashflow_config", existing.ID, "update", map[string]any{
-			"account_id":   accountID,
-			"category":     category,
-			"is_cash":      isCashAccount,
+		err = s.auditLogger.Log(ctx, "account_cashflow_config", existing.ID, "update", map[string]any{
+			"account_id": accountID,
+			"category":   category,
+			"is_cash":    isCashAccount,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to log audit event: %w", err)
+		}
 
 		return existing, nil
 	}
@@ -88,11 +91,14 @@ func (s *CashFlowService) ConfigureAccountCashFlow(
 		return nil, fmt.Errorf("failed to create account cash flow config: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "account_cashflow_config", config.ID, "create", map[string]any{
-		"account_id":   accountID,
-		"category":     category,
-		"is_cash":      isCashAccount,
+	err = s.auditLogger.Log(ctx, "account_cashflow_config", config.ID, "create", map[string]any{
+		"account_id": accountID,
+		"category":   category,
+		"is_cash":    isCashAccount,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return config, nil
 }
@@ -120,10 +126,13 @@ func (s *CashFlowService) CreateTemplate(
 		return nil, fmt.Errorf("failed to create cash flow template: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "cashflow_template", template.ID, "create", map[string]any{
+	err := s.auditLogger.Log(ctx, "cashflow_template", template.ID, "create", map[string]any{
 		"template_code": templateCode,
 		"method":        method,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return template, nil
 }
@@ -240,13 +249,16 @@ func (s *CashFlowService) GenerateCashFlowStatement(
 		return nil, fmt.Errorf("failed to update cash flow run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "cashflow_run", run.ID, "generate", map[string]any{
+	err = s.auditLogger.Log(ctx, "cashflow_run", run.ID, "generate", map[string]any{
 		"method":        method,
 		"period_id":     fiscalPeriodID,
 		"operating_net": operatingNet.String(),
 		"investing_net": investingNet.String(),
 		"financing_net": financingNet.String(),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return run, nil
 }
@@ -685,6 +697,10 @@ func (s *CashFlowService) DeleteCashFlowConfig(ctx context.Context, id common.ID
 		return fmt.Errorf("failed to delete account cash flow config: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "account_cashflow_config", id, "delete", nil)
+	err := s.auditLogger.Log(ctx, "account_cashflow_config", id, "delete", nil)
+	if err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
+
 	return nil
 }

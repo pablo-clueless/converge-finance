@@ -153,12 +153,15 @@ func (s *InvoiceService) CreateInvoice(ctx context.Context, req CreateInvoiceReq
 		return nil, fmt.Errorf("failed to save invoice: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "ap_invoice", invoice.ID, "invoice.created", map[string]any{
+	err = s.auditLogger.Log(ctx, "ap_invoice", invoice.ID, "invoice.created", map[string]any{
 		"invoice_number":  invoice.InvoiceNumber,
 		"internal_number": invoice.InternalNumber,
 		"vendor_id":       vendor.ID.String(),
 		"total_amount":    invoice.TotalAmount.Amount.String(),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	s.logger.Info("AP Invoice created",
 		zap.String("invoice_id", invoice.ID.String()),
@@ -256,10 +259,13 @@ func (s *InvoiceService) ApproveInvoice(ctx context.Context, id common.ID, appro
 		s.logger.Error("Failed to update vendor balance", zap.Error(err))
 	}
 
-	s.auditLogger.Log(ctx, "ap_invoice", invoice.ID, "invoice.approved", map[string]any{
+	err = s.auditLogger.Log(ctx, "ap_invoice", invoice.ID, "invoice.approved", map[string]any{
 		"journal_entry_id": journalEntry.ID.String(),
 		"notes":            notes,
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	s.logger.Info("Invoice approved and posted",
 		zap.String("invoice_id", id.String()),

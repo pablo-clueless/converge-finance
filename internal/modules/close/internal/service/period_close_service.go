@@ -62,10 +62,13 @@ func (s *PeriodCloseService) InitializePeriodClose(ctx context.Context, entityID
 		return nil, fmt.Errorf("failed to create period close status: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "period_close", pc.ID, "create", map[string]interface{}{
+	err = s.auditLogger.Log(ctx, "period_close", pc.ID, "create", map[string]interface{}{
 		"fiscal_period_id": fiscalPeriodID,
 		"fiscal_year_id":   fiscalYearID,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return pc, nil
 }
@@ -84,9 +87,12 @@ func (s *PeriodCloseService) SoftClosePeriod(ctx context.Context, entityID, fisc
 		return nil, fmt.Errorf("failed to update period close status: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "period_close", pc.ID, "soft_close", map[string]interface{}{
+	err = s.auditLogger.Log(ctx, "period_close", pc.ID, "soft_close", map[string]interface{}{
 		"closed_by": userID,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return pc, nil
 }
@@ -149,10 +155,13 @@ func (s *PeriodCloseService) HardClosePeriod(
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "period_close", pc.ID, "hard_close", map[string]interface{}{
+	err = s.auditLogger.Log(ctx, "period_close", pc.ID, "hard_close", map[string]interface{}{
 		"close_run_id": run.ID,
 		"closed_by":    userID,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return run, nil
 }
@@ -363,10 +372,13 @@ func (s *PeriodCloseService) ReopenPeriod(ctx context.Context, entityID, fiscalP
 		return nil, fmt.Errorf("failed to update period close status: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "period_close", pc.ID, "reopen", map[string]interface{}{
+	err = s.auditLogger.Log(ctx, "period_close", pc.ID, "reopen", map[string]interface{}{
 		"reopened_by": userID,
 		"reason":      reason,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return pc, nil
 }
@@ -389,12 +401,15 @@ func (s *PeriodCloseService) CreateCloseRule(
 		return nil, fmt.Errorf("failed to create close rule: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "close_rule", rule.ID, "create", map[string]interface{}{
+	err := s.auditLogger.Log(ctx, "close_rule", rule.ID, "create", map[string]interface{}{
 		"rule_code":         ruleCode,
 		"rule_type":         ruleType,
 		"close_type":        closeType,
 		"target_account_id": targetAccountID,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return rule, nil
 }
@@ -448,10 +463,13 @@ func (s *PeriodCloseService) ReverseCloseRun(ctx context.Context, runID common.I
 		return nil, fmt.Errorf("failed to update close run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "close_run", run.ID, "reverse", map[string]interface{}{
+	err = s.auditLogger.Log(ctx, "close_run", run.ID, "reverse", map[string]interface{}{
 		"reversed_by":       userID,
 		"reversal_entry_id": reversalJE.ID,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return run, nil
 }

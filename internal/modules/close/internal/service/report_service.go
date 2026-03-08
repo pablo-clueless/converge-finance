@@ -79,10 +79,12 @@ func (s *ReportService) CreateReportTemplate(
 		return nil, fmt.Errorf("failed to create report template: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "report_template", template.ID, "create", map[string]interface{}{
+	if err := s.auditLogger.Log(ctx, "report_template", template.ID, "create", map[string]interface{}{
 		"template_code": templateCode,
 		"report_type":   reportType,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return template, nil
 }
@@ -178,10 +180,12 @@ func (s *ReportService) GenerateTrialBalance(
 
 	run.DataRows = rows
 
-	s.auditLogger.Log(ctx, "report_run", run.ID, "generate", map[string]interface{}{
+	if err := s.auditLogger.Log(ctx, "report_run", run.ID, "generate", map[string]interface{}{
 		"report_type": domain.ReportTypeTrialBalance,
 		"period_id":   fiscalPeriodID,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return run, nil
 }
@@ -374,10 +378,12 @@ func (s *ReportService) GenerateIncomeStatement(
 
 	run.DataRows = rows
 
-	s.auditLogger.Log(ctx, "report_run", run.ID, "generate", map[string]interface{}{
+	if err := s.auditLogger.Log(ctx, "report_run", run.ID, "generate", map[string]interface{}{
 		"report_type": domain.ReportTypeIncomeStatement,
 		"period_id":   fiscalPeriodID,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return run, nil
 }
@@ -564,10 +570,12 @@ func (s *ReportService) GenerateBalanceSheet(
 
 	run.DataRows = rows
 
-	s.auditLogger.Log(ctx, "report_run", run.ID, "generate", map[string]interface{}{
+	if err := s.auditLogger.Log(ctx, "report_run", run.ID, "generate", map[string]interface{}{
 		"report_type": domain.ReportTypeBalanceSheet,
 		"period_id":   fiscalPeriodID,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return run, nil
 }
@@ -595,7 +603,9 @@ func (s *ReportService) DeleteReportRun(ctx context.Context, id common.ID) error
 		return fmt.Errorf("failed to delete report run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "report_run", id, "delete", nil)
+	if err := s.auditLogger.Log(ctx, "report_run", id, "delete", nil); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 	return nil
 }
 
@@ -657,9 +667,11 @@ func (s *ReportService) GetYearEndChecklist(ctx context.Context, entityID, fisca
 		checklist.Items = append(checklist.Items, *checkItem)
 	}
 
-	s.auditLogger.Log(ctx, "year_end_checklist", checklist.ID, "create", map[string]interface{}{
+	if err := s.auditLogger.Log(ctx, "year_end_checklist", checklist.ID, "create", map[string]interface{}{
 		"fiscal_year_id": fiscalYearID,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return checklist, nil
 }
@@ -683,10 +695,12 @@ func (s *ReportService) UpdateChecklistItem(ctx context.Context, itemID common.I
 		return nil, fmt.Errorf("failed to update checklist item: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "checklist_item", itemID, "update", map[string]interface{}{
+	if err := s.auditLogger.Log(ctx, "checklist_item", itemID, "update", map[string]interface{}{
 		"completed": completed,
 		"user_id":   userID,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return item, nil
 }

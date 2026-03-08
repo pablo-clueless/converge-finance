@@ -69,10 +69,13 @@ func (s *EODService) InitializeBusinessDate(ctx context.Context, entityID common
 		return nil, fmt.Errorf("failed to create business date: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "business_date", bd.ID, "initialize", map[string]interface{}{
+	err = s.auditLogger.Log(ctx, "business_date", bd.ID, "initialize", map[string]interface{}{
 		"entity_id":    entityID,
 		"initial_date": initialDate.Format("2006-01-02"),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return bd, nil
 }
@@ -222,11 +225,14 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "eod_run", run.ID, "completed", map[string]interface{}{
+	err = s.auditLogger.Log(ctx, "eod_run", run.ID, "completed", map[string]interface{}{
 		"business_date":   businessDate.Format("2006-01-02"),
 		"tasks_completed": run.CompletedTasks,
 		"tasks_failed":    run.FailedTasks,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	run.TaskRuns = taskRuns
 	return run, nil
@@ -427,11 +433,13 @@ func (s *EODService) RolloverBusinessDate(ctx context.Context, entityID common.I
 		return nil, fmt.Errorf("failed to update business date: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "business_date", bd.ID, "rollover", map[string]interface{}{
+	if err := s.auditLogger.Log(ctx, "business_date", bd.ID, "rollover", map[string]interface{}{
 		"from_date": bd.LastEODDate.Format("2006-01-02"),
 		"to_date":   bd.CurrentBusinessDate.Format("2006-01-02"),
 		"user_id":   userID,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return bd, nil
 }
@@ -463,10 +471,13 @@ func (s *EODService) CreateEODTask(ctx context.Context, task *domain.EODTask) (*
 		return nil, fmt.Errorf("failed to create EOD task: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "eod_task", task.ID, "create", map[string]interface{}{
+	err := s.auditLogger.Log(ctx, "eod_task", task.ID, "create", map[string]interface{}{
 		"task_code": task.TaskCode,
 		"task_type": task.TaskType,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return task, nil
 }

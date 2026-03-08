@@ -13,7 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// WorkflowService handles workflow definition operations
 type WorkflowService struct {
 	workflowRepo   repository.WorkflowRepository
 	stepRepo       repository.WorkflowStepRepository
@@ -22,7 +21,6 @@ type WorkflowService struct {
 	logger         *zap.Logger
 }
 
-// NewWorkflowService creates a new WorkflowService
 func NewWorkflowService(
 	workflowRepo repository.WorkflowRepository,
 	stepRepo repository.WorkflowStepRepository,
@@ -39,7 +37,6 @@ func NewWorkflowService(
 	}
 }
 
-// CreateWorkflowRequest contains data for creating a workflow
 type CreateWorkflowRequest struct {
 	EntityID     common.ID
 	WorkflowCode string
@@ -49,9 +46,7 @@ type CreateWorkflowRequest struct {
 	CreatedBy    common.ID
 }
 
-// CreateWorkflow creates a new workflow definition
 func (s *WorkflowService) CreateWorkflow(ctx context.Context, req CreateWorkflowRequest) (*domain.Workflow, error) {
-	// Check if workflow with this code already exists
 	existing, err := s.workflowRepo.GetByCode(ctx, req.EntityID, req.WorkflowCode)
 	if err != nil && err != domain.ErrWorkflowNotFound {
 		return nil, fmt.Errorf("failed to check existing workflow: %w", err)
@@ -73,16 +68,18 @@ func (s *WorkflowService) CreateWorkflow(ctx context.Context, req CreateWorkflow
 		return nil, fmt.Errorf("failed to create workflow: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.created", map[string]any{
+	err = s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.created", map[string]any{
 		"entity_id":     req.EntityID,
 		"workflow_code": req.WorkflowCode,
 		"document_type": req.DocumentType,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return workflow, nil
 }
 
-// GetWorkflow retrieves a workflow by ID with its steps
 func (s *WorkflowService) GetWorkflow(ctx context.Context, id common.ID) (*domain.Workflow, error) {
 	workflow, err := s.workflowRepo.GetByID(ctx, id)
 	if err != nil {
@@ -98,7 +95,6 @@ func (s *WorkflowService) GetWorkflow(ctx context.Context, id common.ID) (*domai
 	return workflow, nil
 }
 
-// GetWorkflowByCode retrieves a workflow by code
 func (s *WorkflowService) GetWorkflowByCode(ctx context.Context, entityID common.ID, code string) (*domain.Workflow, error) {
 	workflow, err := s.workflowRepo.GetByCode(ctx, entityID, code)
 	if err != nil {
@@ -114,7 +110,6 @@ func (s *WorkflowService) GetWorkflowByCode(ctx context.Context, entityID common
 	return workflow, nil
 }
 
-// GetActiveWorkflowForDocument retrieves the active workflow for a document type
 func (s *WorkflowService) GetActiveWorkflowForDocument(ctx context.Context, entityID common.ID, documentType string) (*domain.Workflow, error) {
 	workflow, err := s.workflowRepo.GetActiveByDocumentType(ctx, entityID, documentType)
 	if err != nil {
@@ -130,19 +125,16 @@ func (s *WorkflowService) GetActiveWorkflowForDocument(ctx context.Context, enti
 	return workflow, nil
 }
 
-// ListWorkflows lists workflows with filters
 func (s *WorkflowService) ListWorkflows(ctx context.Context, filter repository.WorkflowFilter) ([]domain.Workflow, int, error) {
 	return s.workflowRepo.List(ctx, filter)
 }
 
-// UpdateWorkflowRequest contains data for updating a workflow
 type UpdateWorkflowRequest struct {
 	ID           common.ID
 	WorkflowName string
 	Description  string
 }
 
-// UpdateWorkflow updates a workflow definition
 func (s *WorkflowService) UpdateWorkflow(ctx context.Context, req UpdateWorkflowRequest) (*domain.Workflow, error) {
 	workflow, err := s.workflowRepo.GetByID(ctx, req.ID)
 	if err != nil {
@@ -160,14 +152,16 @@ func (s *WorkflowService) UpdateWorkflow(ctx context.Context, req UpdateWorkflow
 		return nil, fmt.Errorf("failed to update workflow: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.updated", map[string]any{
+	err = s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.updated", map[string]any{
 		"workflow_name": req.WorkflowName,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return s.GetWorkflow(ctx, workflow.ID)
 }
 
-// ActivateWorkflow activates a workflow
 func (s *WorkflowService) ActivateWorkflow(ctx context.Context, id common.ID) (*domain.Workflow, error) {
 	workflow, err := s.GetWorkflow(ctx, id)
 	if err != nil {
@@ -182,15 +176,17 @@ func (s *WorkflowService) ActivateWorkflow(ctx context.Context, id common.ID) (*
 		return nil, fmt.Errorf("failed to activate workflow: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.activated", map[string]any{
+	err = s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.activated", map[string]any{
 		"entity_id":     workflow.EntityID,
 		"workflow_code": workflow.WorkflowCode,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return workflow, nil
 }
 
-// DeactivateWorkflow deactivates a workflow
 func (s *WorkflowService) DeactivateWorkflow(ctx context.Context, id common.ID) (*domain.Workflow, error) {
 	workflow, err := s.GetWorkflow(ctx, id)
 	if err != nil {
@@ -205,15 +201,17 @@ func (s *WorkflowService) DeactivateWorkflow(ctx context.Context, id common.ID) 
 		return nil, fmt.Errorf("failed to deactivate workflow: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.deactivated", map[string]any{
+	err = s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.deactivated", map[string]any{
 		"entity_id":     workflow.EntityID,
 		"workflow_code": workflow.WorkflowCode,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return workflow, nil
 }
 
-// ArchiveWorkflow archives a workflow
 func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, id common.ID) error {
 	workflow, err := s.workflowRepo.GetByID(ctx, id)
 	if err != nil {
@@ -228,15 +226,17 @@ func (s *WorkflowService) ArchiveWorkflow(ctx context.Context, id common.ID) err
 		return fmt.Errorf("failed to archive workflow: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.archived", map[string]any{
+	err = s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.archived", map[string]any{
 		"entity_id":     workflow.EntityID,
 		"workflow_code": workflow.WorkflowCode,
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return nil
 }
 
-// AddStepRequest contains data for adding a step to a workflow
 type AddStepRequest struct {
 	WorkflowID          common.ID
 	StepNumber          int
@@ -255,7 +255,6 @@ type AddStepRequest struct {
 	ConditionExpression string
 }
 
-// AddStep adds a step to a workflow
 func (s *WorkflowService) AddStep(ctx context.Context, req AddStepRequest) (*domain.WorkflowStep, error) {
 	workflow, err := s.workflowRepo.GetByID(ctx, req.WorkflowID)
 	if err != nil {
@@ -266,7 +265,6 @@ func (s *WorkflowService) AddStep(ctx context.Context, req AddStepRequest) (*dom
 		return nil, domain.ErrInvalidWorkflowStatus
 	}
 
-	// Check for duplicate step number
 	existing, err := s.stepRepo.GetByWorkflowAndNumber(ctx, req.WorkflowID, req.StepNumber)
 	if err != nil && err != domain.ErrStepNotFound {
 		return nil, fmt.Errorf("failed to check existing step: %w", err)
@@ -305,16 +303,18 @@ func (s *WorkflowService) AddStep(ctx context.Context, req AddStepRequest) (*dom
 		return nil, fmt.Errorf("failed to create step: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.step.added", map[string]any{
+	err = s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.step.added", map[string]any{
 		"step_id":     step.ID,
 		"step_number": req.StepNumber,
 		"step_name":   req.StepName,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return step, nil
 }
 
-// UpdateStep updates a workflow step
 func (s *WorkflowService) UpdateStep(ctx context.Context, step *domain.WorkflowStep) error {
 	workflow, err := s.workflowRepo.GetByID(ctx, step.WorkflowID)
 	if err != nil {
@@ -329,15 +329,17 @@ func (s *WorkflowService) UpdateStep(ctx context.Context, step *domain.WorkflowS
 		return fmt.Errorf("failed to update step: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.step.updated", map[string]any{
+	err = s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.step.updated", map[string]any{
 		"step_id":     step.ID,
 		"step_number": step.StepNumber,
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return nil
 }
 
-// RemoveStep removes a step from a workflow
 func (s *WorkflowService) RemoveStep(ctx context.Context, workflowID, stepID common.ID) error {
 	workflow, err := s.workflowRepo.GetByID(ctx, workflowID)
 	if err != nil {
@@ -361,15 +363,17 @@ func (s *WorkflowService) RemoveStep(ctx context.Context, workflowID, stepID com
 		return fmt.Errorf("failed to delete step: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.step.removed", map[string]any{
+	err = s.auditLogger.Log(ctx, "workflow", workflow.ID, "workflow.step.removed", map[string]any{
 		"step_id":     stepID,
 		"step_number": step.StepNumber,
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return nil
 }
 
-// CreateDelegationRequest contains data for creating a delegation
 type CreateDelegationRequest struct {
 	EntityID      common.ID
 	DelegatorID   common.ID
@@ -381,7 +385,6 @@ type CreateDelegationRequest struct {
 	Reason        string
 }
 
-// CreateDelegation creates a new delegation
 func (s *WorkflowService) CreateDelegation(ctx context.Context, req CreateDelegationRequest) (*domain.Delegation, error) {
 	startDate, err := parseDate(req.StartDate)
 	if err != nil {
@@ -421,31 +424,30 @@ func (s *WorkflowService) CreateDelegation(ctx context.Context, req CreateDelega
 		return nil, fmt.Errorf("failed to create delegation: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow_delegation", delegation.ID, "delegation.created", map[string]any{
+	err = s.auditLogger.Log(ctx, "workflow_delegation", delegation.ID, "delegation.created", map[string]any{
 		"entity_id":    req.EntityID,
 		"delegator_id": req.DelegatorID,
 		"delegate_id":  req.DelegateID,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return delegation, nil
 }
 
-// GetDelegation retrieves a delegation by ID
 func (s *WorkflowService) GetDelegation(ctx context.Context, id common.ID) (*domain.Delegation, error) {
 	return s.delegationRepo.GetByID(ctx, id)
 }
 
-// ListDelegations lists delegations for an entity
 func (s *WorkflowService) ListDelegations(ctx context.Context, entityID common.ID, activeOnly bool) ([]domain.Delegation, error) {
 	return s.delegationRepo.ListByEntity(ctx, entityID, activeOnly)
 }
 
-// GetEffectiveDelegate finds the effective delegate for an approver
 func (s *WorkflowService) GetEffectiveDelegate(ctx context.Context, entityID, approverID common.ID, documentType string, workflowID *common.ID) (*domain.Delegation, error) {
 	return s.delegationRepo.GetEffectiveDelegateFor(ctx, entityID, approverID, documentType, workflowID)
 }
 
-// DeactivateDelegation deactivates a delegation
 func (s *WorkflowService) DeactivateDelegation(ctx context.Context, id common.ID) error {
 	delegation, err := s.delegationRepo.GetByID(ctx, id)
 	if err != nil {
@@ -458,15 +460,17 @@ func (s *WorkflowService) DeactivateDelegation(ctx context.Context, id common.ID
 		return fmt.Errorf("failed to deactivate delegation: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow_delegation", delegation.ID, "delegation.deactivated", map[string]any{
+	err = s.auditLogger.Log(ctx, "workflow_delegation", delegation.ID, "delegation.deactivated", map[string]any{
 		"entity_id":    delegation.EntityID,
 		"delegator_id": delegation.DelegatorID,
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return nil
 }
 
-// parseDate parses a date string in YYYY-MM-DD format
 func parseDate(dateStr string) (time.Time, error) {
 	return time.Parse("2006-01-02", dateStr)
 }

@@ -130,12 +130,14 @@ func (s *AssetService) CreateAsset(ctx context.Context, req CreateAssetRequest) 
 	}
 
 	if s.auditLogger != nil {
-		_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "created", map[string]any{
+		if err := s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "created", map[string]any{
 			"asset_code":       asset.AssetCode,
 			"asset_name":       asset.AssetName,
 			"acquisition_cost": asset.AcquisitionCost.String(),
 			"category_id":      asset.CategoryID,
-		})
+		}); err != nil {
+			return nil, fmt.Errorf("failed to log audit event: %w", err)
+		}
 	}
 
 	return asset, nil
@@ -161,10 +163,12 @@ func (s *AssetService) ActivateAsset(ctx context.Context, assetID common.ID, dep
 	}
 
 	if s.auditLogger != nil {
-		_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "activated", map[string]any{
+		if err := s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "activated", map[string]any{
 			"asset_code":              asset.AssetCode,
 			"depreciation_start_date": depreciationStartDate.Format("2006-01-02"),
-		})
+		}); err != nil {
+			return fmt.Errorf("failed to log audit event: %w", err)
+		}
 	}
 
 	return nil
@@ -190,10 +194,12 @@ func (s *AssetService) SuspendAsset(ctx context.Context, assetID common.ID, reas
 	}
 
 	if s.auditLogger != nil {
-		_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "suspended", map[string]any{
+		if err := s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "suspended", map[string]any{
 			"asset_code": asset.AssetCode,
 			"reason":     reason,
-		})
+		}); err != nil {
+			return fmt.Errorf("failed to log audit event: %w", err)
+		}
 	}
 
 	return nil
@@ -219,9 +225,11 @@ func (s *AssetService) ReactivateAsset(ctx context.Context, assetID common.ID) e
 	}
 
 	if s.auditLogger != nil {
-		_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "reactivated", map[string]any{
+		if err := s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "reactivated", map[string]any{
 			"asset_code": asset.AssetCode,
-		})
+		}); err != nil {
+			return fmt.Errorf("failed to log audit event: %w", err)
+		}
 	}
 
 	return nil
@@ -273,7 +281,7 @@ func (s *AssetService) DisposeAsset(ctx context.Context, req DisposalRequest) er
 		}
 
 		if s.auditLogger != nil {
-			_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "disposed", map[string]any{
+			if err := s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "disposed", map[string]any{
 				"asset_code":       asset.AssetCode,
 				"disposal_type":    req.DisposalType,
 				"proceeds":         req.Proceeds.String(),
@@ -281,7 +289,9 @@ func (s *AssetService) DisposeAsset(ctx context.Context, req DisposalRequest) er
 				"book_value":       asset.BookValue.String(),
 				"gain_loss":        asset.DisposalGainLoss.String(),
 				"journal_entry_id": journalEntry.ID,
-			})
+			}); err != nil {
+				return fmt.Errorf("failed to log audit event: %w", err)
+			}
 		}
 
 		return nil
@@ -381,11 +391,13 @@ func (s *AssetService) WriteOffAsset(ctx context.Context, assetID common.ID, not
 		}
 
 		if s.auditLogger != nil {
-			_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "written_off", map[string]any{
+			if err := s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "written_off", map[string]any{
 				"asset_code": asset.AssetCode,
 				"book_value": asset.BookValue.String(),
 				"notes":      notes,
-			})
+			}); err != nil {
+				return fmt.Errorf("failed to log audit event: %w", err)
+			}
 		}
 
 		return nil

@@ -91,11 +91,13 @@ func (s *SegmentService) CreateSegment(ctx context.Context, req CreateSegmentReq
 		return nil, fmt.Errorf("failed to create segment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment", segment.ID, "segment.created", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment", segment.ID, "segment.created", map[string]any{
 		"entity_id":    req.EntityID,
 		"segment_code": req.SegmentCode,
 		"segment_type": req.SegmentType,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return segment, nil
 }
@@ -145,10 +147,12 @@ func (s *SegmentService) UpdateSegment(ctx context.Context, req UpdateSegmentReq
 		return nil, fmt.Errorf("failed to update segment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment", segment.ID, "segment.updated", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment", segment.ID, "segment.updated", map[string]any{
 		"entity_id":    segment.EntityID,
 		"segment_code": segment.SegmentCode,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return segment, nil
 }
@@ -198,10 +202,12 @@ func (s *SegmentService) DeleteSegment(ctx context.Context, id common.ID) error 
 		return fmt.Errorf("failed to delete segment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment", id, "segment.deleted", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment", id, "segment.deleted", map[string]any{
 		"entity_id":    segment.EntityID,
 		"segment_code": segment.SegmentCode,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -254,11 +260,13 @@ func (s *SegmentService) CreateHierarchy(ctx context.Context, req CreateHierarch
 		return nil, fmt.Errorf("failed to create hierarchy: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_hierarchy", hierarchy.ID, "hierarchy.created", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment_hierarchy", hierarchy.ID, "hierarchy.created", map[string]any{
 		"entity_id":      req.EntityID,
 		"hierarchy_code": req.HierarchyCode,
 		"segment_type":   req.SegmentType,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return hierarchy, nil
 }
@@ -325,12 +333,14 @@ func (s *SegmentService) AssignToSegment(ctx context.Context, req AssignToSegmen
 		return nil, fmt.Errorf("failed to create assignment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_assignment", assignment.ID, "assignment.created", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment_assignment", assignment.ID, "assignment.created", map[string]any{
 		"entity_id":          req.EntityID,
 		"segment_id":         req.SegmentID,
 		"assignment_type":    req.AssignmentType,
 		"allocation_percent": req.AllocationPercent,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return assignment, nil
 }
@@ -385,10 +395,12 @@ func (s *SegmentService) UpdateAssignment(ctx context.Context, id common.ID, all
 		return nil, fmt.Errorf("failed to update assignment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_assignment", assignment.ID, "assignment.updated", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment_assignment", assignment.ID, "assignment.updated", map[string]any{
 		"entity_id":  assignment.EntityID,
 		"segment_id": assignment.SegmentID,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return assignment, nil
 }
@@ -403,10 +415,12 @@ func (s *SegmentService) DeleteAssignment(ctx context.Context, id common.ID) err
 		return fmt.Errorf("failed to delete assignment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_assignment", id, "assignment.deleted", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment_assignment", id, "assignment.deleted", map[string]any{
 		"entity_id":  assignment.EntityID,
 		"segment_id": assignment.SegmentID,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -468,11 +482,13 @@ func (s *SegmentService) CalculateSegmentBalances(ctx context.Context, entityID,
 		}
 	}
 
-	s.auditLogger.Log(ctx, "segment_balance", entityID, "balances.calculated", map[string]any{
-		"entity_id":      entityID,
-		"period_id":      periodID,
-		"balance_count":  len(balanceMap),
-	})
+	if err := s.auditLogger.Log(ctx, "segment_balance", entityID, "balances.calculated", map[string]any{
+		"entity_id":     entityID,
+		"period_id":     periodID,
+		"balance_count": len(balanceMap),
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -526,12 +542,14 @@ func (s *SegmentService) CreateIntersegmentTransaction(ctx context.Context, req 
 		return nil, fmt.Errorf("failed to create intersegment transaction: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "intersegment_transaction", txn.ID, "intersegment.created", map[string]any{
+	if err := s.auditLogger.Log(ctx, "intersegment_transaction", txn.ID, "intersegment.created", map[string]any{
 		"entity_id":       req.EntityID,
 		"from_segment_id": req.FromSegmentID,
 		"to_segment_id":   req.ToSegmentID,
 		"amount":          req.Amount,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return txn, nil
 }
@@ -558,9 +576,11 @@ func (s *SegmentService) EliminateIntersegmentTransaction(ctx context.Context, i
 		return fmt.Errorf("failed to eliminate transaction: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "intersegment_transaction", id, "intersegment.eliminated", map[string]any{
+	if err := s.auditLogger.Log(ctx, "intersegment_transaction", id, "intersegment.eliminated", map[string]any{
 		"entity_id": txn.EntityID,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -577,10 +597,12 @@ func (s *SegmentService) ActivateSegment(ctx context.Context, id common.ID) (*do
 		return nil, fmt.Errorf("failed to activate segment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment", id, "segment.activated", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment", id, "segment.activated", map[string]any{
 		"entity_id":    segment.EntityID,
 		"segment_code": segment.SegmentCode,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return segment, nil
 }
@@ -597,10 +619,12 @@ func (s *SegmentService) DeactivateSegment(ctx context.Context, id common.ID) (*
 		return nil, fmt.Errorf("failed to deactivate segment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment", id, "segment.deactivated", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment", id, "segment.deactivated", map[string]any{
 		"entity_id":    segment.EntityID,
 		"segment_code": segment.SegmentCode,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return segment, nil
 }

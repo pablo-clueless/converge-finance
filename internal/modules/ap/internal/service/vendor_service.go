@@ -106,10 +106,13 @@ func (s *VendorService) CreateVendor(ctx context.Context, req CreateVendorReques
 		return nil, fmt.Errorf("failed to save vendor: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "vendor", vendor.ID, "vendor.created", map[string]any{
+	err = s.auditLogger.Log(ctx, "vendor", vendor.ID, "vendor.created", map[string]any{
 		"vendor_code": vendor.VendorCode,
 		"name":        vendor.Name,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Vendor created",
 		zap.String("vendor_id", vendor.ID.String()),

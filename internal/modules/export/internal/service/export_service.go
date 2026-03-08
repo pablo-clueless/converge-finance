@@ -88,12 +88,14 @@ func (s *ExportService) RequestExport(ctx context.Context, req RequestExportInpu
 		return nil, fmt.Errorf("failed to create export job: %w", err)
 	}
 
-	_ = s.auditLogger.Log(ctx, "export_job", job.ID, "requested", map[string]any{
+	if err := s.auditLogger.Log(ctx, "export_job", job.ID, "requested", map[string]any{
 		"entity_id":   req.EntityID,
 		"job_number":  job.JobNumber,
 		"export_type": job.ExportType,
 		"format":      job.Format,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return job, nil
 }
@@ -173,12 +175,14 @@ func (s *ExportService) ProcessJob(ctx context.Context, jobID common.ID, generat
 		return fmt.Errorf("failed to update job: %w", err)
 	}
 
-	_ = s.auditLogger.Log(ctx, "export_job", job.ID, "completed", map[string]any{
+	if err := s.auditLogger.Log(ctx, "export_job", job.ID, "completed", map[string]any{
 		"entity_id":  job.EntityID,
 		"job_number": job.JobNumber,
 		"file_size":  written,
 		"row_count":  result.RowCount,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -250,13 +254,15 @@ func (s *ExportService) CreateTemplate(ctx context.Context, req CreateTemplateIn
 		return nil, fmt.Errorf("failed to create template: %w", err)
 	}
 
-	_ = s.auditLogger.Log(ctx, "export_template", template.ID, "created", map[string]any{
+	if err := s.auditLogger.Log(ctx, "export_template", template.ID, "created", map[string]any{
 		"entity_id":     req.EntityID,
 		"template_code": template.TemplateCode,
 		"template_name": template.TemplateName,
 		"module":        template.Module,
 		"export_type":   template.ExportType,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return template, nil
 }
