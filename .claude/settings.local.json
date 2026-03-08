@@ -32,7 +32,8 @@
       "Bash(powershell -Command:*)",
       "Bash(go run:*)",
       "Bash(go vet:*)",
-      "Bash(staticcheck:*)"
+      "Bash(staticcheck:*)",
+      "Bash(git status:*)"
     ]
   }
 }
