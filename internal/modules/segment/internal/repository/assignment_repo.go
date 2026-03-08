@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"converge-finance.com/m/internal/domain/common"
@@ -174,7 +175,12 @@ func (r *PostgresAssignmentRepo) List(ctx context.Context, filter AssignmentFilt
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var assignments []domain.Assignment
 	for rows.Next() {
@@ -202,7 +208,12 @@ func (r *PostgresAssignmentRepo) ListBySegment(ctx context.Context, segmentID co
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var assignments []domain.Assignment
 	for rows.Next() {
@@ -230,7 +241,12 @@ func (r *PostgresAssignmentRepo) ListByAssignment(ctx context.Context, assignmen
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var assignments []domain.Assignment
 	for rows.Next() {
@@ -261,7 +277,12 @@ func (r *PostgresAssignmentRepo) ListEffective(ctx context.Context, entityID com
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var assignments []domain.Assignment
 	for rows.Next() {

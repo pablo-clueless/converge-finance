@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	"converge-finance.com/m/internal/domain/common"
 	"converge-finance.com/m/internal/modules/segment/internal/domain"
@@ -182,7 +183,12 @@ func (r *PostgresReportRepo) List(ctx context.Context, filter ReportFilter) ([]d
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var reports []domain.SegmentReport
 	for rows.Next() {
@@ -338,7 +344,12 @@ func (r *PostgresReportDataRepo) GetByReportID(ctx context.Context, reportID com
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var dataList []domain.ReportData
 	for rows.Next() {

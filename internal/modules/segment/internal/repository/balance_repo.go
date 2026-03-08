@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	"converge-finance.com/m/internal/domain/common"
 	"converge-finance.com/m/internal/modules/segment/internal/domain"
@@ -141,7 +142,12 @@ func (r *PostgresBalanceRepo) GetSummaryBySegment(ctx context.Context, entityID,
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var summaries []domain.SegmentBalanceSummary
 	for rows.Next() {
@@ -193,7 +199,12 @@ func (r *PostgresBalanceRepo) listBalances(ctx context.Context, query string, ar
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var balances []domain.SegmentBalance
 	for rows.Next() {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"strconv"
 
 	"converge-finance.com/m/internal/domain/common"
@@ -22,13 +23,13 @@ type TemplateRepository interface {
 }
 
 type TemplateFilter struct {
-	EntityID     common.ID
-	Module       string
-	ExportType   string
-	IsActive     *bool
+	EntityID      common.ID
+	Module        string
+	ExportType    string
+	IsActive      *bool
 	IncludeSystem bool
-	Limit        int
-	Offset       int
+	Limit         int
+	Offset        int
 }
 
 type PostgresTemplateRepo struct {
@@ -180,7 +181,12 @@ func (r *PostgresTemplateRepo) List(ctx context.Context, filter TemplateFilter) 
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var templates []domain.ExportTemplate
 	for rows.Next() {

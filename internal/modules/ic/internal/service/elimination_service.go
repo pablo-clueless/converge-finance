@@ -241,12 +241,15 @@ func (s *EliminationService) GenerateEliminations(ctx context.Context, req Gener
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.elimination_run", run.ID, "generated", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.elimination_run", run.ID, "generated", map[string]any{
 			"run_number":    run.RunNumber,
 			"parent_entity": parent.Code,
 			"entry_count":   run.EntryCount,
 			"total_amount":  run.TotalEliminations.String(),
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to log generated run action: %w", err)
+		}
 	}
 
 	return run, nil
@@ -388,10 +391,13 @@ func (s *EliminationService) PostEliminationRun(ctx context.Context, runID commo
 		}
 
 		if s.auditLogger != nil {
-			s.auditLogger.LogAction(ctx, "ic.elimination_run", run.ID, "posted", map[string]any{
+			err = s.auditLogger.LogAction(ctx, "ic.elimination_run", run.ID, "posted", map[string]any{
 				"run_number":       run.RunNumber,
 				"journal_entry_id": je.ID,
 			})
+			if err != nil {
+				return fmt.Errorf("failed to log posted run action: %w", err)
+			}
 		}
 
 		return nil

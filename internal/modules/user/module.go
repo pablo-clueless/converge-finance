@@ -3,6 +3,7 @@ package user
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -117,7 +118,12 @@ func (m *Module) listUsers(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var users []User
 	for rows.Next() {
@@ -427,7 +433,12 @@ func (m *Module) getUserRoles(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch roles", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var roles []string
 	for rows.Next() {
@@ -504,7 +515,12 @@ func (m *Module) getEntityAccess(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch entity access", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var access []UserEntityAccess
 	for rows.Next() {

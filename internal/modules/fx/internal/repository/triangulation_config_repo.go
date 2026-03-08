@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"time"
 
 	"converge-finance.com/m/internal/domain/common"
@@ -291,7 +292,12 @@ func (r *PostgresCurrencyPairConfigRepo) List(ctx context.Context, entityID comm
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var configs []domain.CurrencyPairConfig
 	for rows.Next() {
@@ -556,7 +562,12 @@ func (r *PostgresTriangulationLogRepo) List(ctx context.Context, filter Triangul
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var logs []domain.TriangulationLog
 	for rows.Next() {

@@ -335,11 +335,14 @@ func (s *RevaluationService) ApproveRevaluation(ctx context.Context, runID, appr
 		return nil, fmt.Errorf("failed to update run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.approved", map[string]any{
+	err = s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.approved", map[string]any{
 		"entity_id":   run.EntityID,
 		"run_number":  run.RunNumber,
 		"approved_by": approverID,
 	})
+	if err != nil {
+		s.logger.Warn("failed to log audit event", zap.Error(err))
+	}
 
 	return run, nil
 }
@@ -364,12 +367,15 @@ func (s *RevaluationService) PostRevaluation(ctx context.Context, req PostRevalu
 		return nil, fmt.Errorf("failed to update run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.posted", map[string]any{
+	err = s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.posted", map[string]any{
 		"entity_id":        run.EntityID,
 		"run_number":       run.RunNumber,
 		"posted_by":        req.PosterID,
 		"journal_entry_id": req.JournalEntryID,
 	})
+	if err != nil {
+		s.logger.Warn("failed to log audit event", zap.Error(err))
+	}
 
 	return run, nil
 }
@@ -386,20 +392,23 @@ func (s *RevaluationService) ReverseRevaluation(ctx context.Context, req Reverse
 		return nil, err
 	}
 
-	if err := run.Reverse(req.ReversedBy, req.ReversalJournalID); err != nil {
+	if err = run.Reverse(req.ReversedBy, req.ReversalJournalID); err != nil {
 		return nil, err
 	}
 
-	if err := s.runRepo.Update(ctx, run); err != nil {
+	if err = s.runRepo.Update(ctx, run); err != nil {
 		return nil, fmt.Errorf("failed to update run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.reversed", map[string]any{
+	err = s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.reversed", map[string]any{
 		"entity_id":           run.EntityID,
 		"run_number":          run.RunNumber,
 		"reversed_by":         req.ReversedBy,
 		"reversal_journal_id": req.ReversalJournalID,
 	})
+	if err != nil {
+		s.logger.Warn("failed to log audit event", zap.Error(err))
+	}
 
 	return run, nil
 }

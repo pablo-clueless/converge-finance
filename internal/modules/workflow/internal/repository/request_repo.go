@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"converge-finance.com/m/internal/domain/common"
@@ -250,7 +251,12 @@ func (r *PostgresRequestRepo) List(ctx context.Context, filter RequestFilter) ([
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var requests []domain.ApprovalRequest
 	for rows.Next() {
@@ -421,7 +427,12 @@ func (r *PostgresActionRepo) GetByRequestID(ctx context.Context, requestID commo
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var actions []domain.ApprovalAction
 	for rows.Next() {
@@ -452,7 +463,12 @@ func (r *PostgresActionRepo) GetByRequestAndStep(ctx context.Context, requestID 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var actions []domain.ApprovalAction
 	for rows.Next() {
@@ -616,7 +632,12 @@ func (r *PostgresPendingApprovalRepo) GetByApprover(ctx context.Context, approve
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var pending []domain.PendingApproval
 	for rows.Next() {
@@ -643,7 +664,12 @@ func (r *PostgresPendingApprovalRepo) GetByRequest(ctx context.Context, requestI
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var pending []domain.PendingApproval
 	for rows.Next() {
@@ -687,7 +713,12 @@ func (r *PostgresPendingApprovalRepo) GetOverdue(ctx context.Context, entityID c
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var pending []domain.PendingApproval
 	for rows.Next() {
