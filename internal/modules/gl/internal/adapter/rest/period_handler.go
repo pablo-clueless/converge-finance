@@ -541,7 +541,10 @@ func (h *PeriodHandler) ReopenPeriod(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.period", period.ID, "reopened", nil)
+		err = h.auditLogger.LogAction(ctx, "gl.period", period.ID, "reopened", nil)
+		if err != nil {
+			h.logger.Error("Failed to log reopened period action", zap.Error(err))
+		}
 	}
 
 	respondJSON(w, http.StatusOK, toPeriodResponse(period))

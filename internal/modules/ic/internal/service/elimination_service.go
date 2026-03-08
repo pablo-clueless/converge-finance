@@ -116,10 +116,13 @@ func (s *EliminationService) UpdateRule(ctx context.Context, ruleID common.ID, r
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.elimination_rule", rule.ID, "updated", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.elimination_rule", rule.ID, "updated", map[string]any{
 			"rule_code": rule.RuleCode,
 			"rule_name": rule.RuleName,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to log updated rule action: %w", err)
+		}
 	}
 
 	return rule, nil
@@ -136,9 +139,12 @@ func (s *EliminationService) DeleteRule(ctx context.Context, ruleID common.ID) e
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.elimination_rule", rule.ID, "deleted", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.elimination_rule", rule.ID, "deleted", map[string]any{
 			"rule_code": rule.RuleCode,
 		})
+		if err != nil {
+			return fmt.Errorf("failed to log deleted rule action: %w", err)
+		}
 	}
 
 	return nil
