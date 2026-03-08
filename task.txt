@@ -1,0 +1,90 @@
+Core In-House Components
+
+1. General Ledger (GL)
+- Chart of Accounts (multi-entity, multi-currency)
+- Journal Entry engine
+- Period & fiscal year management
+- Trial Balance
+- Financial statements (BS, P&L, Cash Flow)
+- Audit trail & posting rules
+- Recurring entries
+- Accruals & reversals
+
+2. Accounts Payable (AP)
+- Vendor management
+- Invoice processing & matching (2-way, 3-way)
+- Payment scheduling & execution
+- Vendor aging reports
+- Early payment discounts
+- Debit memos & adjustments
+- AP reconciliation
+
+3. Accounts Receivable (AR)
+- Customer management
+- Invoice generation
+- Receipt & payment allocation
+- Credit management & limits
+- Collections workflow
+- Dunning management
+- AR aging & DSO tracking
+- AR reconciliation
+
+4. Multi-Entity & Intercompany
+- Entity hierarchy management
+- Intercompany transaction engine
+- Intercompany eliminations
+- Transfer pricing rules
+- Shared services allocation
+- Minority interest tracking
+
+5. Group Consolidation
+- Consolidation rules engine
+- Currency translation (CTA)
+- Elimination journals
+- Segment reporting (IFRS 8 / ASC 280)
+- Ownership structure management
+- Consolidation audit trail
+
+6. Multi-Currency
+- Currency master & exchange rates
+- Rate source management (daily, monthly, spot)
+- Revaluation engine
+- Unrealized/realized FX gains & losses
+- Currency translation adjustments
+- Triangulation (for multi-leg conversions)
+
+7. Fixed Assets
+- Asset register
+- Depreciation engine (straight-line, declining balance, units of production)
+- Asset lifecycle (acquisition → disposal)
+- Revaluation (IFRS model)
+- Impairment tracking
+- Asset tagging & location tracking
+- Capital WIP (Work in Progress)
+
+8. Cost & Budgeting
+- Cost center management
+- Cost allocation rules
+- Budget creation & versioning
+- Budget vs actual tracking
+- Forecasting engine
+- Variance analysis
+- Project costing
+
+9. Period Close & Reporting
+- Close checklist & workflow
+- Soft & hard close controls
+- Sub-ledger to GL reconciliation
+- Financial reporting engine
+- Report builder (P&L, BS, CF by entity/segment)
+- Comparative reporting (prior period, prior year)
+- Drill-down from report to journal
+
+10. Audit, Compliance & Controls
+- Immutable audit log
+- Segregation of duties (SoD) engine
+- Approval workflows (multi-level, threshold-based)
+- Document attachment & retention
+- SOX control mapping
+- Period lock management
+- User activity tracking

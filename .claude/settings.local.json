@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /s /b)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:martinfowler.com)",
+      "Bash(go mod tidy:*)",
+      "Bash(go build:*)",
+      "Bash(node -e:*)",
+      "Bash(find:*)",
+      "Bash(make migrate-reset:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker volume rm:*)",
+      "Bash(docker volume:*)",
+      "Bash(findstr:*)",
+      "Bash(make dev:*)",
+      "Bash(docker logs:*)",
+      "Bash(make migrate-up:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker restart:*)",
+      "Bash(./converge migrate:*)",
+      "Bash(docker inspect:*)",
+      "Bash(wc:*)",
+      "Bash(go get:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(./converge.exe migrate:*)",
+      "Bash(timeout 5 ./converge.exe serve:*)",
+      "Bash(netstat:*)",
+      "Bash(psql:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(go run:*)",
+      "Bash(go vet:*)",
+      "Bash(staticcheck:*)"
+    ]
+  }
+}

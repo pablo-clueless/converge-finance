@@ -1,0 +1,64 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: build/docker/Dockerfile
+    container_name: converge-finance-app
+    ports:
+      - "8080:8080"   # REST API
+      - "9090:9090"   # gRPC
+    environment:
+      - DATABASE_URL=postgres://converge:converge@postgres:5432/converge_finance?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
+      - LOG_LEVEL=info
+      - ENV=development
+      - HTTP_PORT=8080
+      - GRPC_PORT=9090
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - converge-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: converge-finance-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: converge
+      POSTGRES_PASSWORD: converge
+      POSTGRES_DB: converge_finance
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U converge -d converge_finance"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - converge-network
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: build/docker/Dockerfile
+    container_name: converge-finance-migrate
+    command: ["./converge", "migrate", "up"]
+    environment:
+      - DATABASE_URL=postgres://converge:converge@postgres:5432/converge_finance?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - converge-network
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  converge-network:
+    driver: bridge
