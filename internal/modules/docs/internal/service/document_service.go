@@ -316,7 +316,7 @@ func (s *DocumentService) SetLegalHold(ctx context.Context, documentID common.ID
 		action = "document.legal_hold_removed"
 	}
 
-	s.auditLogger.Log(ctx, "document", documentID, action, map[string]any{
+	_ = s.auditLogger.Log(ctx, "document", documentID, action, map[string]any{
 		"entity_id":  doc.EntityID,
 		"user_id":    userID,
 		"legal_hold": hold,
@@ -340,7 +340,7 @@ func (s *DocumentService) ArchiveDocument(ctx context.Context, documentID common
 		return err
 	}
 
-	s.auditLogger.Log(ctx, "document", documentID, "archived", map[string]any{
+	_ = s.auditLogger.Log(ctx, "document", documentID, "archived", map[string]any{
 		"entity_id": doc.EntityID,
 		"user_id":   userID,
 	})
@@ -362,7 +362,7 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID common.
 		return err
 	}
 
-	s.auditLogger.Log(ctx, "document", documentID, "deleted", map[string]any{
+	_ = s.auditLogger.Log(ctx, "document", documentID, "deleted", map[string]any{
 		"entity_id": doc.EntityID,
 		"user_id":   userID,
 	})

@@ -217,7 +217,7 @@ func (r *PostgresAccountCashFlowConfigRepo) ListByEntity(ctx context.Context, en
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var configs []domain.AccountCashFlowConfig
 	for rows.Next() {
@@ -263,7 +263,7 @@ func (r *PostgresAccountCashFlowConfigRepo) ListCashAccounts(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var configs []domain.AccountCashFlowConfig
 	for rows.Next() {
@@ -419,7 +419,7 @@ func (r *PostgresCashFlowTemplateRepo) scanTemplates(rows *sql.Rows, err error) 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var templates []domain.CashFlowTemplate
 	for rows.Next() {

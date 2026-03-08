@@ -279,7 +279,7 @@ func (s *EODService) executeTask(ctx context.Context, tx interface{}, run *domai
 	return tr.Complete(recordsProcessed, recordsFailed, summary)
 }
 
-func (s *EODService) taskValidateTransactions(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskValidateTransactions(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"validated":    true,
@@ -291,7 +291,7 @@ func (s *EODService) taskValidateTransactions(ctx context.Context, run *domain.E
 	return 0, 0, summary
 }
 
-func (s *EODService) taskPostPendingBatches(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskPostPendingBatches(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"batches_posted": 0,
@@ -302,7 +302,7 @@ func (s *EODService) taskPostPendingBatches(ctx context.Context, run *domain.EOD
 	return 0, 0, summary
 }
 
-func (s *EODService) taskRunReconciliation(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskRunReconciliation(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"accounts_checked":    0,
@@ -314,7 +314,7 @@ func (s *EODService) taskRunReconciliation(ctx context.Context, run *domain.EODR
 	return 0, 0, summary
 }
 
-func (s *EODService) taskCalculateAccruals(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskCalculateAccruals(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"accruals_calculated": 0,
@@ -325,7 +325,7 @@ func (s *EODService) taskCalculateAccruals(ctx context.Context, run *domain.EODR
 	return 0, 0, summary
 }
 
-func (s *EODService) taskFXRateUpdate(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskFXRateUpdate(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"rates_updated": 0,
@@ -336,7 +336,7 @@ func (s *EODService) taskFXRateUpdate(ctx context.Context, run *domain.EODRun, t
 	return 0, 0, summary
 }
 
-func (s *EODService) taskGenerateDailyReports(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskGenerateDailyReports(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"reports_generated": 0,
@@ -347,7 +347,7 @@ func (s *EODService) taskGenerateDailyReports(ctx context.Context, run *domain.E
 	return 0, 0, summary
 }
 
-func (s *EODService) taskValidateBalances(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskValidateBalances(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"is_balanced":   true,
@@ -360,7 +360,7 @@ func (s *EODService) taskValidateBalances(ctx context.Context, run *domain.EODRu
 	return 0, 0, summary
 }
 
-func (s *EODService) taskRolloverDate(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskRolloverDate(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"status": "deferred_to_completion",
@@ -370,7 +370,7 @@ func (s *EODService) taskRolloverDate(ctx context.Context, run *domain.EODRun, t
 	return 1, 0, summary
 }
 
-func (s *EODService) taskCustom(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskCustom(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"status": "completed",

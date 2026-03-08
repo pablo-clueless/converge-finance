@@ -219,7 +219,7 @@ func (s *AssetService) ReactivateAsset(ctx context.Context, assetID common.ID) e
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "reactivated", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "reactivated", map[string]any{
 			"asset_code": asset.AssetCode,
 		})
 	}
@@ -273,7 +273,7 @@ func (s *AssetService) DisposeAsset(ctx context.Context, req DisposalRequest) er
 		}
 
 		if s.auditLogger != nil {
-			s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "disposed", map[string]any{
+			_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "disposed", map[string]any{
 				"asset_code":       asset.AssetCode,
 				"disposal_type":    req.DisposalType,
 				"proceeds":         req.Proceeds.String(),
@@ -381,7 +381,7 @@ func (s *AssetService) WriteOffAsset(ctx context.Context, assetID common.ID, not
 		}
 
 		if s.auditLogger != nil {
-			s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "written_off", map[string]any{
+			_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "written_off", map[string]any{
 				"asset_code": asset.AssetCode,
 				"book_value": asset.BookValue.String(),
 				"notes":      notes,
