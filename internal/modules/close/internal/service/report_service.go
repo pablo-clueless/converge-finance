@@ -163,8 +163,8 @@ func (s *ReportService) GenerateTrialBalance(
 	rows = append(rows, *totalRow)
 
 	if err := s.reportDataRepo.CreateBatch(ctx, rows); err != nil {
-		run.Fail(err.Error())
-		s.reportRunRepo.Update(ctx, run)
+		_ = run.Fail(err.Error())
+		_ = s.reportRunRepo.Update(ctx, run)
 		return run, fmt.Errorf("failed to save report data: %w", err)
 	}
 
@@ -359,8 +359,8 @@ func (s *ReportService) GenerateIncomeStatement(
 	rows = append(rows, *netIncomeRow)
 
 	if err := s.reportDataRepo.CreateBatch(ctx, rows); err != nil {
-		run.Fail(err.Error())
-		s.reportRunRepo.Update(ctx, run)
+		_ = run.Fail(err.Error())
+		_ = s.reportRunRepo.Update(ctx, run)
 		return run, fmt.Errorf("failed to save report data: %w", err)
 	}
 
@@ -549,8 +549,8 @@ func (s *ReportService) GenerateBalanceSheet(
 	rows = append(rows, *checkRow)
 
 	if err := s.reportDataRepo.CreateBatch(ctx, rows); err != nil {
-		run.Fail(err.Error())
-		s.reportRunRepo.Update(ctx, run)
+		_ = run.Fail(err.Error())
+		_ = s.reportRunRepo.Update(ctx, run)
 		return run, fmt.Errorf("failed to save report data: %w", err)
 	}
 
@@ -653,7 +653,7 @@ func (s *ReportService) GetYearEndChecklist(ctx context.Context, entityID, fisca
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		}
-		s.yearEndCheckRepo.CreateItem(ctx, checkItem)
+		_ = s.yearEndCheckRepo.CreateItem(ctx, checkItem)
 		checklist.Items = append(checklist.Items, *checkItem)
 	}
 

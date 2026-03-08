@@ -203,7 +203,7 @@ func (h *ExportHandler) DownloadJob(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, http.StatusInternalServerError, "failed to open file")
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	w.Header().Set("Content-Type", result.MimeType)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+result.FileName+"\"")

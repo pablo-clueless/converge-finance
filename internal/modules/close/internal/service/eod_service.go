@@ -110,7 +110,6 @@ func (s *EODService) CreateOrUpdateEODConfig(ctx context.Context, cfg *domain.EO
 }
 
 func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDate time.Time, userID common.ID) (*domain.EODRun, error) {
-
 	existing, err := s.eodRunRepo.GetByBusinessDate(ctx, entityID, businessDate)
 	if err == nil && existing != nil && existing.Status == domain.EODStatusCompleted {
 		return nil, fmt.Errorf("EOD already completed for %s", businessDate.Format("2006-01-02"))
@@ -129,7 +128,14 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			_ = s.auditLogger.Log(ctx, "eod_run", existing.ID, "failed", map[string]interface{}{
+				"business_date": businessDate.Format("2006-01-02"),
+				"error":         rbErr.Error(),
+			})
+		}
+	}()
 
 	run := domain.NewEODRun(entityID, businessDate, userID)
 	run.SetTotalTasks(len(tasks))
@@ -151,26 +157,35 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 	if err := run.Start(); err != nil {
 		return nil, err
 	}
-	s.eodRunRepo.WithTx(tx).Update(ctx, run)
+
+	if err := s.eodRunRepo.WithTx(tx).Update(ctx, run); err != nil {
+		return nil, fmt.Errorf("failed to update EOD run: %w", err)
+	}
 
 	for i := range taskRuns {
 		tr := &taskRuns[i]
 		task := &tasks[i]
 
 		if err := s.executeTask(ctx, tx, run, tr, task); err != nil {
-			tr.Fail(err.Error())
+			_ = tr.Fail(err.Error())
 			run.IncrementTaskCount(0, 1, 0)
 
 			if task.IsRequired {
-				run.Fail(fmt.Sprintf("Required task %s failed: %s", task.TaskCode, err.Error()))
-				s.eodRunRepo.WithTx(tx).Update(ctx, run)
-				s.eodTaskRunRepo.WithTx(tx).Update(ctx, tr)
-				tx.Commit()
+				_ = run.Fail(fmt.Sprintf("Required task %s failed: %s", task.TaskCode, err.Error()))
+				if updateErr := s.eodRunRepo.WithTx(tx).Update(ctx, run); updateErr != nil {
+					return nil, fmt.Errorf("failed to update EOD run: %w", updateErr)
+				}
+				if updateErr := s.eodTaskRunRepo.WithTx(tx).Update(ctx, tr); updateErr != nil {
+					return nil, fmt.Errorf("failed to update task run: %w", updateErr)
+				}
+				if commitErr := tx.Commit(); commitErr != nil {
+					return nil, fmt.Errorf("failed to commit transaction: %w", commitErr)
+				}
 
-				s.auditLogger.Log(ctx, "eod_run", run.ID, "failed", map[string]interface{}{
+				_ = s.auditLogger.Log(ctx, "eod_run", existing.ID, "failed", map[string]interface{}{
 					"business_date": businessDate.Format("2006-01-02"),
 					"failed_task":   task.TaskCode,
-					"error":         err.Error(),
+					"error":         err,
 				})
 
 				return run, err
@@ -179,7 +194,9 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 			run.IncrementTaskCount(1, 0, 0)
 		}
 
-		s.eodTaskRunRepo.WithTx(tx).Update(ctx, tr)
+		if err = s.eodTaskRunRepo.WithTx(tx).Update(ctx, tr); err != nil {
+			return nil, fmt.Errorf("failed to update task run: %w", err)
+		}
 	}
 
 	if err := run.Complete(); err != nil {

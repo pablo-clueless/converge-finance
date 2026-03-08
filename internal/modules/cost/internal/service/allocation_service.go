@@ -65,7 +65,7 @@ func (s *AllocationService) CreateAllocationRule(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.allocation_rule", rule.ID, "created", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "cost.allocation_rule", rule.ID, "created", map[string]any{
 			"rule_code":         rule.RuleCode,
 			"allocation_method": rule.AllocationMethod,
 		})
@@ -155,7 +155,7 @@ func (s *AllocationService) InitiateAllocationRun(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "initiated", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "initiated", map[string]any{
 			"run_number":       run.RunNumber,
 			"fiscal_period_id": fiscalPeriodID,
 		})
@@ -269,7 +269,7 @@ func (s *AllocationService) ExecuteAllocation(ctx context.Context, runID common.
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "completed", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "completed", map[string]any{
 			"rules_executed":  rulesExecuted,
 			"total_allocated": totalAllocated,
 		})

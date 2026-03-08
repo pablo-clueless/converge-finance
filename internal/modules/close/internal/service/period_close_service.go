@@ -111,7 +111,13 @@ func (s *PeriodCloseService) HardClosePeriod(
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			_ = s.auditLogger.Log(ctx, "period_close", pc.ID, "hard_close", map[string]interface{}{
+				"error": rbErr.Error(),
+			})
+		}
+	}()
 
 	runNumber, err := s.closeRunRepo.WithTx(tx).GetNextRunNumber(ctx, entityID, "CLS")
 	if err != nil {
@@ -125,9 +131,9 @@ func (s *PeriodCloseService) HardClosePeriod(
 
 	run, err = s.executeCloseRun(ctx, tx, run)
 	if err != nil {
-		run.Fail(err.Error())
-		s.closeRunRepo.WithTx(tx).Update(ctx, run)
-		tx.Commit()
+		_ = run.Fail(err.Error())
+		_ = s.closeRunRepo.WithTx(tx).Update(ctx, run)
+		_ = tx.Commit()
 		return run, err
 	}
 
@@ -155,7 +161,7 @@ func (s *PeriodCloseService) executeCloseRun(ctx context.Context, tx *sql.Tx, ru
 	if err := run.StartProcessing(); err != nil {
 		return run, err
 	}
-	s.closeRunRepo.WithTx(tx).Update(ctx, run)
+	_ = s.closeRunRepo.WithTx(tx).Update(ctx, run)
 
 	rules, err := s.closeRuleRepo.GetActiveRulesForCloseType(ctx, run.EntityID, run.CloseType)
 	if err != nil {
@@ -164,7 +170,7 @@ func (s *PeriodCloseService) executeCloseRun(ctx context.Context, tx *sql.Tx, ru
 
 	if len(rules) == 0 {
 
-		run.Complete(common.NewID(), 0, 0, money.Zero(run.Currency), money.Zero(run.Currency))
+		_ = run.Complete(common.NewID(), 0, 0, money.Zero(run.Currency), money.Zero(run.Currency))
 		return run, nil
 	}
 
@@ -223,7 +229,7 @@ func (s *PeriodCloseService) executeCloseRun(ctx context.Context, tx *sql.Tx, ru
 	}
 
 	if len(entries) == 0 {
-		run.Complete(common.NewID(), len(rules), 0, totalDebits, totalCredits)
+		_ = run.Complete(common.NewID(), len(rules), 0, totalDebits, totalCredits)
 		return run, nil
 	}
 

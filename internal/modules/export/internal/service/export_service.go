@@ -88,7 +88,7 @@ func (s *ExportService) RequestExport(ctx context.Context, req RequestExportInpu
 		return nil, fmt.Errorf("failed to create export job: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "export_job", job.ID, "requested", map[string]any{
+	_ = s.auditLogger.Log(ctx, "export_job", job.ID, "requested", map[string]any{
 		"entity_id":   req.EntityID,
 		"job_number":  job.JobNumber,
 		"export_type": job.ExportType,
@@ -161,7 +161,7 @@ func (s *ExportService) ProcessJob(ctx context.Context, jobID common.ID, generat
 		if failErr := job.Fail(err.Error()); failErr != nil {
 			s.logger.Error("failed to mark job as failed", zap.Error(failErr))
 		}
-		s.jobRepo.Update(ctx, job)
+		_ = s.jobRepo.Update(ctx, job)
 		return fmt.Errorf("failed to write export file: %w", err)
 	}
 
@@ -173,7 +173,7 @@ func (s *ExportService) ProcessJob(ctx context.Context, jobID common.ID, generat
 		return fmt.Errorf("failed to update job: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "export_job", job.ID, "completed", map[string]any{
+	_ = s.auditLogger.Log(ctx, "export_job", job.ID, "completed", map[string]any{
 		"entity_id":  job.EntityID,
 		"job_number": job.JobNumber,
 		"file_size":  written,
@@ -250,7 +250,7 @@ func (s *ExportService) CreateTemplate(ctx context.Context, req CreateTemplateIn
 		return nil, fmt.Errorf("failed to create template: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "export_template", template.ID, "created", map[string]any{
+	_ = s.auditLogger.Log(ctx, "export_template", template.ID, "created", map[string]any{
 		"entity_id":     req.EntityID,
 		"template_code": template.TemplateCode,
 		"template_name": template.TemplateName,

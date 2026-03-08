@@ -148,7 +148,8 @@ func (s *InvoiceService) CreateInvoice(ctx context.Context, req CreateInvoiceReq
 
 	}
 
-	if err := s.invoiceRepo.Create(ctx, invoice); err != nil {
+	err = s.invoiceRepo.Create(ctx, invoice)
+	if err != nil {
 		return nil, fmt.Errorf("failed to save invoice: %w", err)
 	}
 
@@ -360,7 +361,10 @@ func (s *InvoiceService) VoidInvoice(ctx context.Context, id common.ID, reason s
 	if err == nil {
 		newBalance := vendor.CurrentBalance.MustSubtract(invoice.TotalAmount)
 		vendor.UpdateBalance(newBalance)
-		s.vendorRepo.Update(ctx, vendor)
+		err = s.vendorRepo.Update(ctx, vendor)
+		if err != nil {
+			s.logger.Fatal("unable to update vendor")
+		}
 	}
 
 	s.logger.Info("Invoice voided",

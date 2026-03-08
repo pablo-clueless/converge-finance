@@ -315,7 +315,7 @@ func (h *PeriodHandler) CloseFiscalYear(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.fiscal_year", fiscalYear.ID, "closed", nil)
+		_ = h.auditLogger.LogAction(ctx, "gl.fiscal_year", fiscalYear.ID, "closed", nil)
 	}
 
 	respondJSON(w, http.StatusOK, toFiscalYearResponse(fiscalYear))
@@ -465,7 +465,7 @@ func (h *PeriodHandler) OpenPeriod(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.period", period.ID, "opened", nil)
+		_ = h.auditLogger.LogAction(ctx, "gl.period", period.ID, "opened", nil)
 	}
 
 	respondJSON(w, http.StatusOK, toPeriodResponse(period))
@@ -503,7 +503,7 @@ func (h *PeriodHandler) ClosePeriod(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.period", period.ID, "closed", nil)
+		_ = h.auditLogger.LogAction(ctx, "gl.period", period.ID, "closed", nil)
 	}
 
 	respondJSON(w, http.StatusOK, toPeriodResponse(period))

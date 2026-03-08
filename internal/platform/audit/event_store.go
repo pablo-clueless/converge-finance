@@ -225,7 +225,7 @@ func (s *PostgresEventStore) queryEvents(ctx context.Context, query string, args
 	if err != nil {
 		return nil, fmt.Errorf("failed to query events: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var events []Event
 	for rows.Next() {

@@ -266,7 +266,7 @@ func (r *PostgresAccountRepository) GetPostingAccounts(ctx context.Context, enti
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var accounts []domain.Account
 	for rows.Next() {

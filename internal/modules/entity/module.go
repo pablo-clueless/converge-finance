@@ -83,7 +83,7 @@ func (m *Module) listEntities(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch entities", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var entities []Entity
 	for rows.Next() {

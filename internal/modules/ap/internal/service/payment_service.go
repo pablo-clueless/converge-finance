@@ -407,7 +407,10 @@ func (s *PaymentService) CompletePayment(ctx context.Context, id common.ID, bank
 	if err == nil {
 		newBalance := vendor.CurrentBalance.MustSubtract(payment.Amount)
 		vendor.UpdateBalance(newBalance)
-		s.vendorRepo.Update(ctx, vendor)
+		err = s.vendorRepo.Update(ctx, vendor)
+		if err != nil {
+			s.logger.Fatal("unable to update vendor")
+		}
 	}
 
 	s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.completed", map[string]any{
@@ -453,7 +456,10 @@ func (s *PaymentService) FailPayment(ctx context.Context, id common.ID, reason s
 			continue
 		}
 
-		s.invoiceRepo.Update(ctx, invoice)
+		err = s.invoiceRepo.Update(ctx, invoice)
+		if err != nil {
+			s.logger.Fatal("unable to update invoice")
+		}
 	}
 
 	if err := s.paymentRepo.Update(ctx, payment); err != nil {
@@ -499,7 +505,7 @@ func (s *PaymentService) VoidPayment(ctx context.Context, id common.ID) error {
 			continue
 		}
 
-		s.invoiceRepo.Update(ctx, invoice)
+		_ = s.invoiceRepo.Update(ctx, invoice)
 	}
 
 	if err := payment.Void(); err != nil {
