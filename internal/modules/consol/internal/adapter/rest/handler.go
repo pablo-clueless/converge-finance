@@ -37,13 +37,6 @@ func respondError(w http.ResponseWriter, status int, message string) {
 	})
 }
 
-func respondValidationError(w http.ResponseWriter, err *common.ValidationError) {
-	respondJSON(w, http.StatusBadRequest, ValidationErrorResponse{
-		Error:  "validation_error",
-		Errors: err.Errors,
-	})
-}
-
 type ErrorResponse struct {
 	Error   string `json:"error"`
 	Message string `json:"message"`
@@ -78,11 +71,6 @@ func getEntityID(r *http.Request) common.ID {
 		return common.ID(entityID)
 	}
 	return common.ID(r.Header.Get("X-Entity-ID"))
-}
-
-func getUserID(r *http.Request) common.ID {
-	userID := auth.GetUserIDFromContext(r.Context())
-	return common.ID(userID)
 }
 
 func getIntQuery(r *http.Request, name string, defaultValue int) int {

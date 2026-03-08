@@ -130,7 +130,7 @@ func (s *AssetService) CreateAsset(ctx context.Context, req CreateAssetRequest) 
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "created", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "created", map[string]any{
 			"asset_code":       asset.AssetCode,
 			"asset_name":       asset.AssetName,
 			"acquisition_cost": asset.AcquisitionCost.String(),
@@ -161,7 +161,7 @@ func (s *AssetService) ActivateAsset(ctx context.Context, assetID common.ID, dep
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "activated", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "activated", map[string]any{
 			"asset_code":              asset.AssetCode,
 			"depreciation_start_date": depreciationStartDate.Format("2006-01-02"),
 		})
@@ -190,7 +190,7 @@ func (s *AssetService) SuspendAsset(ctx context.Context, assetID common.ID, reas
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "suspended", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "fa.asset", asset.ID, "suspended", map[string]any{
 			"asset_code": asset.AssetCode,
 			"reason":     reason,
 		})

@@ -131,7 +131,7 @@ func (s *ExportService) ProcessJob(ctx context.Context, jobID common.ID, generat
 		if failErr := job.Fail(err.Error()); failErr != nil {
 			s.logger.Error("failed to mark job as failed", zap.Error(failErr))
 		}
-		s.jobRepo.Update(ctx, job)
+		_ = s.jobRepo.Update(ctx, job)
 		return fmt.Errorf("export generation failed: %w", err)
 	}
 
@@ -142,7 +142,7 @@ func (s *ExportService) ProcessJob(ctx context.Context, jobID common.ID, generat
 		if failErr := job.Fail(err.Error()); failErr != nil {
 			s.logger.Error("failed to mark job as failed", zap.Error(failErr))
 		}
-		s.jobRepo.Update(ctx, job)
+		_ = s.jobRepo.Update(ctx, job)
 		return fmt.Errorf("failed to create export directory: %w", err)
 	}
 
@@ -151,10 +151,10 @@ func (s *ExportService) ProcessJob(ctx context.Context, jobID common.ID, generat
 		if failErr := job.Fail(err.Error()); failErr != nil {
 			s.logger.Error("failed to mark job as failed", zap.Error(failErr))
 		}
-		s.jobRepo.Update(ctx, job)
+		_ = s.jobRepo.Update(ctx, job)
 		return fmt.Errorf("failed to create export file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	written, err := io.Copy(file, result.Data)
 	if err != nil {

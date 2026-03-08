@@ -364,9 +364,10 @@ func (s *PaymentService) postPaymentToGL(ctx context.Context, payment *domain.Pa
 		Credit:      payment.Amount,
 	})
 
-	if !payment.DiscountTaken.IsZero() {
-
-	}
+	// TODO: Handle discount taken when discount accounts are configured
+	// if !payment.DiscountTaken.IsZero() {
+	//     Add discount journal line
+	// }
 
 	req := gl.CreateJournalEntryRequest{
 		EntityID:     payment.EntityID,

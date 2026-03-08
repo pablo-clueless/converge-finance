@@ -105,14 +105,6 @@ func getBoolQuery(r *http.Request, name string) *bool {
 	return &boolValue
 }
 
-func getStringQuery(r *http.Request, name string) *string {
-	value := r.URL.Query().Get(name)
-	if value == "" {
-		return nil
-	}
-	return &value
-}
-
 func decodeJSON(r *http.Request, v any) error {
 	return json.NewDecoder(r.Body).Decode(v)
 }

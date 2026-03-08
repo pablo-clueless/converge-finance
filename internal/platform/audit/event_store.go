@@ -114,7 +114,7 @@ func (s *PostgresEventStore) AppendMultiple(ctx context.Context, events []Event)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	for i := range events {
 		if events[i].ID.IsZero() {

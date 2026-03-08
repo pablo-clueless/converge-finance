@@ -18,7 +18,7 @@ func RunMigrations(databaseURL string, direction string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create migrator: %w", err)
 	}
-	defer m.Close()
+	defer func() { _, _ = m.Close() }()
 
 	switch direction {
 	case "up":
@@ -38,7 +38,7 @@ func RunMigrations(databaseURL string, direction string) error {
 		}
 	case "drop":
 		// Close the migrator first to release any connections
-		m.Close()
+		_, _ = m.Close()
 		if err := dropAllSchemas(databaseURL); err != nil {
 			return fmt.Errorf("failed to drop schemas: %w", err)
 		}
@@ -47,7 +47,7 @@ func RunMigrations(databaseURL string, direction string) error {
 		if err != nil {
 			return fmt.Errorf("failed to recreate migrator: %w", err)
 		}
-		defer m.Close()
+		defer func() { _, _ = m.Close() }()
 	case "force":
 		if err := m.Force(0); err != nil {
 			return fmt.Errorf("failed to force version: %w", err)
@@ -67,7 +67,7 @@ func GetMigrationVersion(databaseURL string) (uint, bool, error) {
 	if err != nil {
 		return 0, false, fmt.Errorf("failed to create migrator: %w", err)
 	}
-	defer m.Close()
+	defer func() { _, _ = m.Close() }()
 
 	return m.Version()
 }
@@ -77,7 +77,7 @@ func dropAllSchemas(databaseURL string) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	// Drop all custom types first (in all schemas)
 	rows, err := db.Query(`
@@ -97,7 +97,7 @@ func dropAllSchemas(databaseURL string) error {
 		}
 		rows.Close()
 		for _, t := range types {
-			db.Exec(fmt.Sprintf("DROP TYPE IF EXISTS %s.%s CASCADE", t.schema, t.name))
+			_, _ = db.Exec(fmt.Sprintf("DROP TYPE IF EXISTS %s.%s CASCADE", t.schema, t.name))
 		}
 	}
 

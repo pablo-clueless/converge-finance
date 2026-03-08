@@ -134,7 +134,7 @@ func (s *DocumentService) Upload(ctx context.Context, req UploadRequest, fileRea
 		return nil, fmt.Errorf("failed to create document: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "document", doc.ID, "uploaded", map[string]any{
+	_ = s.auditLogger.Log(ctx, "document", doc.ID, "uploaded", map[string]any{
 		"entity_id":       req.EntityID,
 		"uploaded_by":     req.UploadedBy,
 		"document_number": doc.DocumentNumber,
@@ -251,7 +251,7 @@ func (s *DocumentService) Attach(ctx context.Context, documentID common.ID, refT
 		return nil, fmt.Errorf("failed to create attachment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "document", documentID, "attached", map[string]any{
+	_ = s.auditLogger.Log(ctx, "document", documentID, "attached", map[string]any{
 		"entity_id":      doc.EntityID,
 		"attached_by":    attachedBy,
 		"reference_type": refType,
@@ -271,7 +271,7 @@ func (s *DocumentService) Detach(ctx context.Context, documentID common.ID, refT
 		return err
 	}
 
-	s.auditLogger.Log(ctx, "document", documentID, "detached", map[string]any{
+	_ = s.auditLogger.Log(ctx, "document", documentID, "detached", map[string]any{
 		"entity_id":      doc.EntityID,
 		"detached_by":    detachedBy,
 		"reference_type": refType,

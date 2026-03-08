@@ -394,7 +394,7 @@ func (s *InvoiceService) VoidInvoice(ctx context.Context, id common.ID, reason s
 	if err == nil {
 		newBalance := customer.CurrentBalance.MustSubtract(invoice.TotalAmount)
 		customer.UpdateBalance(newBalance)
-		s.customerRepo.Update(ctx, customer)
+		_ = s.customerRepo.Update(ctx, customer)
 	}
 
 	s.auditLogger.Log(ctx, "ar_invoice", invoice.ID, "invoice.voided", map[string]any{
@@ -429,7 +429,7 @@ func (s *InvoiceService) WriteOffInvoice(ctx context.Context, id common.ID, reas
 	if err == nil {
 		newBalance := customer.CurrentBalance.MustSubtract(writeOffAmount)
 		customer.UpdateBalance(newBalance)
-		s.customerRepo.Update(ctx, customer)
+		_ = s.customerRepo.Update(ctx, customer)
 	}
 
 	s.auditLogger.Log(ctx, "ar_invoice", invoice.ID, "invoice.written_off", map[string]any{

@@ -265,7 +265,7 @@ func (h *PeriodHandler) CreateFiscalYear(w http.ResponseWriter, r *http.Request)
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogCreate(ctx, "gl.fiscal_year", fiscalYear.ID, map[string]any{
+		_ = h.auditLogger.LogCreate(ctx, "gl.fiscal_year", fiscalYear.ID, map[string]any{
 			"year_code":  fiscalYear.YearCode,
 			"start_date": fiscalYear.StartDate,
 			"end_date":   fiscalYear.EndDate,

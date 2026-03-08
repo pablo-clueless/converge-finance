@@ -177,7 +177,7 @@ func (s *CashFlowService) GenerateCashFlowStatement(
 	cashConfigs, err := s.configRepo.ListCashAccounts(ctx, entityID)
 	if err != nil {
 		run.Fail()
-		s.runRepo.Update(ctx, run)
+		_ = s.runRepo.Update(ctx, run)
 		return run, fmt.Errorf("failed to get cash accounts: %w", err)
 	}
 
@@ -214,14 +214,14 @@ func (s *CashFlowService) GenerateCashFlowStatement(
 
 	if err != nil {
 		run.Fail()
-		s.runRepo.Update(ctx, run)
+		_ = s.runRepo.Update(ctx, run)
 		return run, fmt.Errorf("failed to generate cash flow lines: %w", err)
 	}
 
 	// Save lines
 	if err := s.lineRepo.CreateBatch(ctx, lines); err != nil {
 		run.Fail()
-		s.runRepo.Update(ctx, run)
+		_ = s.runRepo.Update(ctx, run)
 		return run, fmt.Errorf("failed to save cash flow lines: %w", err)
 	}
 
@@ -320,9 +320,10 @@ func (s *CashFlowService) generateIndirectMethod(
 
 		// Adjust sign based on account type for indirect method
 		adjustedAmount := change
-		if config.AdjustmentType == "add_back" {
+		switch config.AdjustmentType {
+		case "add_back":
 			adjustedAmount = change.Abs()
-		} else if config.AdjustmentType == "subtract" {
+		case "subtract":
 			adjustedAmount = change.Abs().Neg()
 		}
 

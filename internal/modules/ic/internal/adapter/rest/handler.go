@@ -79,11 +79,6 @@ func getEntityID(r *http.Request) common.ID {
 	return common.ID(r.Header.Get("X-Entity-ID"))
 }
 
-func getUserID(r *http.Request) common.ID {
-	userID := auth.GetUserIDFromContext(r.Context())
-	return common.ID(userID)
-}
-
 func getIntQuery(r *http.Request, name string, defaultValue int) int {
 	value := r.URL.Query().Get(name)
 	if value == "" {
@@ -94,23 +89,6 @@ func getIntQuery(r *http.Request, name string, defaultValue int) int {
 		return defaultValue
 	}
 	return intValue
-}
-
-func getBoolQuery(r *http.Request, name string) *bool {
-	value := r.URL.Query().Get(name)
-	if value == "" {
-		return nil
-	}
-	boolValue := value == "true" || value == "1"
-	return &boolValue
-}
-
-func getStringQuery(r *http.Request, name string) *string {
-	value := r.URL.Query().Get(name)
-	if value == "" {
-		return nil
-	}
-	return &value
 }
 
 func decodeJSON(r *http.Request, v any) error {

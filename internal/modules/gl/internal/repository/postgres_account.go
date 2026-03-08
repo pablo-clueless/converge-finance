@@ -139,7 +139,6 @@ func (r *PostgresAccountRepository) List(ctx context.Context, filter domain.Acco
 	if filter.SearchQuery != "" {
 		query += fmt.Sprintf(" AND (account_code ILIKE $%d OR account_name ILIKE $%d)", argIndex, argIndex)
 		args = append(args, "%"+filter.SearchQuery+"%")
-		argIndex++
 	}
 
 	query += " ORDER BY account_code"
@@ -155,7 +154,7 @@ func (r *PostgresAccountRepository) List(ctx context.Context, filter domain.Acco
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var accounts []domain.Account
 	for rows.Next() {
@@ -181,7 +180,6 @@ func (r *PostgresAccountRepository) Count(ctx context.Context, filter domain.Acc
 	if filter.IsActive != nil {
 		query += fmt.Sprintf(" AND is_active = $%d", argIndex)
 		args = append(args, *filter.IsActive)
-		argIndex++
 	}
 
 	var count int64
@@ -202,7 +200,7 @@ func (r *PostgresAccountRepository) GetTree(ctx context.Context, entityID common
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var accounts []domain.Account
 	for rows.Next() {
@@ -228,7 +226,7 @@ func (r *PostgresAccountRepository) GetChildren(ctx context.Context, parentID co
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var accounts []domain.Account
 	for rows.Next() {

@@ -233,7 +233,7 @@ func (s *ReceiptService) ConfirmReceipt(ctx context.Context, id common.ID) error
 	}
 
 	if receipt.IsFullyApplied() {
-		receipt.MarkApplied()
+		_ = receipt.MarkApplied()
 	}
 
 	if err := s.receiptRepo.Update(ctx, receipt); err != nil {
@@ -244,7 +244,7 @@ func (s *ReceiptService) ConfirmReceipt(ctx context.Context, id common.ID) error
 	customer.UpdateBalance(newBalance)
 
 	if customer.OnCreditHold && !customer.ShouldTriggerCreditHold() {
-
+		customer.OnCreditHold = false
 	}
 
 	if err := s.customerRepo.Update(ctx, customer); err != nil {
@@ -338,7 +338,7 @@ func (s *ReceiptService) ReverseReceipt(ctx context.Context, id common.ID, reaso
 			continue
 		}
 
-		s.invoiceRepo.Update(ctx, invoice)
+		_ = s.invoiceRepo.Update(ctx, invoice)
 	}
 
 	if err := receipt.Reverse(reason, reversedBy); err != nil {
@@ -353,7 +353,7 @@ func (s *ReceiptService) ReverseReceipt(ctx context.Context, id common.ID, reaso
 	if err == nil {
 		newBalance := customer.CurrentBalance.MustAdd(receipt.AppliedAmount)
 		customer.UpdateBalance(newBalance)
-		s.customerRepo.Update(ctx, customer)
+		_ = s.customerRepo.Update(ctx, customer)
 	}
 
 	s.auditLogger.Log(ctx, "ar_receipt", receipt.ID, "receipt.reversed", map[string]any{

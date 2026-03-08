@@ -270,7 +270,7 @@ func (h *AccountHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogCreate(ctx, "gl.account", account.ID, map[string]any{
+		_ = h.auditLogger.LogCreate(ctx, "gl.account", account.ID, map[string]any{
 			"code": account.Code,
 			"name": account.Name,
 			"type": account.Type,
@@ -333,7 +333,7 @@ func (h *AccountHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogUpdate(ctx, "gl.account", account.ID, map[string]any{
+		_ = h.auditLogger.LogUpdate(ctx, "gl.account", account.ID, map[string]any{
 			"name":        account.Name,
 			"description": account.Description,
 		})
@@ -369,7 +369,7 @@ func (h *AccountHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogDelete(ctx, "gl.account", account.ID, map[string]any{
+		_ = h.auditLogger.LogDelete(ctx, "gl.account", account.ID, map[string]any{
 			"code": account.Code,
 			"name": account.Name,
 		})
@@ -431,7 +431,7 @@ func (h *AccountHandler) Activate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.account", account.ID, "activated", nil)
+		_ = h.auditLogger.LogAction(ctx, "gl.account", account.ID, "activated", nil)
 	}
 
 	respondJSON(w, http.StatusOK, toAccountResponse(account))
@@ -469,7 +469,7 @@ func (h *AccountHandler) Deactivate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.account", account.ID, "deactivated", nil)
+		_ = h.auditLogger.LogAction(ctx, "gl.account", account.ID, "deactivated", nil)
 	}
 
 	respondJSON(w, http.StatusOK, toAccountResponse(account))

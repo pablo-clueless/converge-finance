@@ -8,6 +8,14 @@ import (
 	"converge-finance.com/m/internal/platform/auth"
 )
 
+// contextKey is a custom type for context keys to avoid collisions
+type contextKey string
+
+const (
+	httpRequestKey    contextKey = "http_request"
+	correlationIDKey  contextKey = "correlation_id"
+)
+
 type Logger struct {
 	eventStore EventStore
 }
@@ -48,11 +56,9 @@ func (l *Logger) LogAction(ctx context.Context, aggregateType string, aggregateI
 }
 
 func (l *Logger) WithAudit(ctx context.Context, aggregateType string, aggregateID common.ID, eventType string, fn func() (map[string]any, error)) error {
-
 	data, err := fn()
 	if err != nil {
-
-		l.Log(ctx, aggregateType, aggregateID, eventType+"_failed", map[string]any{
+		_ = l.Log(ctx, aggregateType, aggregateID, eventType+"_failed", map[string]any{
 			"error": err.Error(),
 		})
 		return err
@@ -72,11 +78,11 @@ func (l *Logger) extractMetadata(ctx context.Context) EventMetadata {
 		metadata.EntityID = common.ID(claims.EntityID)
 	}
 
-	if correlationID, ok := ctx.Value("correlation_id").(string); ok {
+	if correlationID, ok := ctx.Value(correlationIDKey).(string); ok {
 		metadata.CorrelationID = correlationID
 	}
 
-	if req, ok := ctx.Value("http_request").(*http.Request); ok {
+	if req, ok := ctx.Value(httpRequestKey).(*http.Request); ok {
 		metadata.IPAddress = getClientIP(req)
 		metadata.UserAgent = req.UserAgent()
 	}
@@ -100,9 +106,9 @@ func getClientIP(r *http.Request) string {
 }
 
 func ContextWithRequest(ctx context.Context, r *http.Request) context.Context {
-	return context.WithValue(ctx, "http_request", r)
+	return context.WithValue(ctx, httpRequestKey, r)
 }
 
 func ContextWithCorrelationID(ctx context.Context, correlationID string) context.Context {
-	return context.WithValue(ctx, "correlation_id", correlationID)
+	return context.WithValue(ctx, correlationIDKey, correlationID)
 }
