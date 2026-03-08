@@ -352,13 +352,16 @@ func (s *ExportService) CreateSchedule(ctx context.Context, req CreateScheduleIn
 		return nil, fmt.Errorf("failed to create schedule: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "export_schedule", schedule.ID, "created", map[string]any{
+	err = s.auditLogger.Log(ctx, "export_schedule", schedule.ID, "created", map[string]any{
 		"entity_id":       req.EntityID,
 		"created_by":      req.CreatedBy,
 		"schedule_name":   schedule.ScheduleName,
 		"template_id":     schedule.TemplateID,
 		"cron_expression": schedule.CronExpression,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return schedule, nil
 }

@@ -48,16 +48,16 @@ func NewDocumentService(
 }
 
 type UploadRequest struct {
-	EntityID       common.ID
-	FileName       string
-	MimeType       string
-	FileSize       int64
-	DocumentType   string
-	Description    string
-	Tags           []string
-	Metadata       map[string]interface{}
-	RetentionCode  string
-	UploadedBy     common.ID
+	EntityID      common.ID
+	FileName      string
+	MimeType      string
+	FileSize      int64
+	DocumentType  string
+	Description   string
+	Tags          []string
+	Metadata      map[string]interface{}
+	RetentionCode string
+	UploadedBy    common.ID
 }
 
 type UploadResult struct {
@@ -433,12 +433,15 @@ func (s *DocumentService) CreateVersion(ctx context.Context, req CreateVersionRe
 		return nil, fmt.Errorf("failed to create version: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "document", doc.ID, "version_created", map[string]any{
+	err = s.auditLogger.Log(ctx, "document", doc.ID, "version_created", map[string]any{
 		"entity_id":      doc.EntityID,
 		"created_by":     req.CreatedBy,
 		"version_number": versionNumber,
 		"file_name":      req.FileName,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return version, nil
 }
@@ -483,7 +486,7 @@ func (s *DocumentService) generateStoragePath(entityID common.ID, documentType, 
 	)
 }
 
-func (s *DocumentService) storeFile(ctx context.Context, config *domain.StorageConfig, path string, content []byte) error {
+func (s *DocumentService) storeFile(_ context.Context, config *domain.StorageConfig, path string, content []byte) error {
 	s.logger.Info("storing file",
 		zap.String("storage_type", string(config.StorageType)),
 		zap.String("path", path),
@@ -492,7 +495,7 @@ func (s *DocumentService) storeFile(ctx context.Context, config *domain.StorageC
 	return nil
 }
 
-func (s *DocumentService) retrieveFile(ctx context.Context, config *domain.StorageConfig, path string) (io.ReadCloser, error) {
+func (s *DocumentService) retrieveFile(_ context.Context, config *domain.StorageConfig, path string) (io.ReadCloser, error) {
 	s.logger.Info("retrieving file",
 		zap.String("storage_type", string(config.StorageType)),
 		zap.String("path", path),

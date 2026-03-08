@@ -86,7 +86,11 @@ func (r *PostgresAttachmentRepo) ListByDocument(ctx context.Context, documentID 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			panic(err)
+		}
+	}()
 
 	var attachments []domain.Attachment
 	for rows.Next() {
@@ -112,7 +116,12 @@ func (r *PostgresAttachmentRepo) ListByReference(ctx context.Context, refType st
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	var attachments []domain.Attachment
 	for rows.Next() {

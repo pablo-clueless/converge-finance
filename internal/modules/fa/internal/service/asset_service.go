@@ -454,11 +454,14 @@ func (s *AssetService) CreateTransfer(ctx context.Context, req TransferRequest) 
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "fa.transfer", transfer.ID, "created", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "fa.transfer", transfer.ID, "created", map[string]any{
 			"transfer_number": transfer.TransferNumber,
 			"asset_id":        asset.ID,
 			"asset_code":      asset.AssetCode,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to log audit action: %w", err)
+		}
 	}
 
 	return transfer, nil
@@ -484,9 +487,12 @@ func (s *AssetService) ApproveTransfer(ctx context.Context, transferID common.ID
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "fa.transfer", transfer.ID, "approved", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "fa.transfer", transfer.ID, "approved", map[string]any{
 			"transfer_number": transfer.TransferNumber,
 		})
+		if err != nil {
+			return fmt.Errorf("failed to log audit action: %w", err)
+		}
 	}
 
 	return nil
@@ -524,13 +530,16 @@ func (s *AssetService) CompleteTransfer(ctx context.Context, transferID common.I
 		}
 
 		if s.auditLogger != nil {
-			s.auditLogger.LogAction(ctx, "fa.transfer", transfer.ID, "completed", map[string]any{
+			err = s.auditLogger.LogAction(ctx, "fa.transfer", transfer.ID, "completed", map[string]any{
 				"transfer_number": transfer.TransferNumber,
 				"asset_id":        asset.ID,
 				"asset_code":      asset.AssetCode,
 				"to_location":     transfer.ToLocationCode,
 				"to_department":   transfer.ToDepartmentCode,
 			})
+			if err != nil {
+				return fmt.Errorf("failed to log audit action: %w", err)
+			}
 		}
 
 		return nil

@@ -232,7 +232,7 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 	return run, nil
 }
 
-func (s *EODService) executeTask(ctx context.Context, tx interface{}, run *domain.EODRun, tr *domain.EODTaskRun, task *domain.EODTask) error {
+func (s *EODService) executeTask(ctx context.Context, _ any, run *domain.EODRun, tr *domain.EODTaskRun, task *domain.EODTask) error {
 	if err := tr.Start(); err != nil {
 		return err
 	}

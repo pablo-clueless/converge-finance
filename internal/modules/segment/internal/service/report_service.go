@@ -148,12 +148,15 @@ func (s *ReportService) GenerateSegmentReport(ctx context.Context, req GenerateS
 
 	report.Data = reportData
 
-	s.auditLogger.Log(ctx, "segment_report", report.ID, "report.generated", map[string]any{
+	err = s.auditLogger.Log(ctx, "segment_report", report.ID, "report.generated", map[string]any{
 		"entity_id":     req.EntityID,
 		"report_number": reportNumber,
 		"segment_type":  req.SegmentType,
 		"segment_count": len(segments),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit action: %w", err)
+	}
 
 	return report, nil
 }

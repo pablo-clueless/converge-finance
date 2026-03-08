@@ -254,7 +254,7 @@ func (s *EliminationService) GenerateEliminations(ctx context.Context, req Gener
 
 func (s *EliminationService) generateEntriesForRule(
 	ctx context.Context,
-	run *domain.EliminationRun,
+	_ *domain.EliminationRun,
 	rule *domain.EliminationRule,
 	entities []domain.EntityHierarchy,
 	fiscalPeriodID common.ID,
