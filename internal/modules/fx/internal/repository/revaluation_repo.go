@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"converge-finance.com/m/internal/domain/common"
@@ -160,7 +161,12 @@ func (r *PostgresAccountFXConfigRepo) ListByEntity(ctx context.Context, entityID
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("error closing rows: %v", err)
+		}
+	}()
 
 	var configs []domain.AccountFXConfig
 	for rows.Next() {
@@ -420,7 +426,12 @@ func (r *PostgresRevaluationRunRepo) List(ctx context.Context, filter Revaluatio
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("error closing rows: %v", err)
+		}
+	}()
 
 	var runs []domain.RevaluationRun
 	for rows.Next() {
@@ -602,7 +613,12 @@ func (r *PostgresRevaluationDetailRepo) GetByRunID(ctx context.Context, runID co
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("error closing rows: %v", err)
+		}
+	}()
 
 	var details []domain.RevaluationDetail
 	for rows.Next() {

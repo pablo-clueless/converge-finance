@@ -345,9 +345,12 @@ func (s *AllocationService) PostAllocation(ctx context.Context, runID common.ID)
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "posted", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "posted", map[string]any{
 			"journal_entry_id": je.ID,
 		})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -380,7 +383,10 @@ func (s *AllocationService) ReverseAllocation(ctx context.Context, runID common.
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "reversed", nil)
+		err = s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "reversed", nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
