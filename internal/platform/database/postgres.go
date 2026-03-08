@@ -99,7 +99,7 @@ func (db *PostgresDB) QueryRowWithEntity(ctx context.Context, entityID, query st
 
 	// Set the entity context on this specific connection
 	if _, err := conn.ExecContext(ctx, fmt.Sprintf("SET LOCAL app.current_entity_id = '%s'", entityID)); err != nil {
-		conn.Close()
+		_ = conn.Close()
 		return nil, nil, fmt.Errorf("failed to set entity context: %w", err)
 	}
 

@@ -267,7 +267,7 @@ func (h *CustomerHandler) Suspend(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Reason string `json:"reason"`
 	}
-	json.NewDecoder(r.Body).Decode(&req)
+	_ = json.NewDecoder(r.Body).Decode(&req)
 
 	if err := h.customerService.SuspendCustomer(r.Context(), common.ID(id), req.Reason); err != nil {
 		h.logger.Error("Failed to suspend customer", zap.Error(err))
@@ -379,7 +379,7 @@ func toCustomerResponse(c *domain.Customer) CustomerResponse {
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	_ = json.NewEncoder(w).Encode(data)
 }
 
 func respondError(w http.ResponseWriter, status int, message string) {

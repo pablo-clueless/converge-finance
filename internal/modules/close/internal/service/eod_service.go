@@ -197,7 +197,7 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 		bd, err := s.businessDateRepo.GetByEntityID(ctx, entityID)
 		if err == nil && bd != nil {
 			bd.Rollover(nextDate, run.ID)
-			s.businessDateRepo.WithTx(tx).Update(ctx, bd)
+			_ = s.businessDateRepo.WithTx(tx).Update(ctx, bd)
 		}
 	}
 

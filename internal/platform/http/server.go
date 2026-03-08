@@ -338,7 +338,7 @@ func (s *Server) handleSwaggerUI(w http.ResponseWriter, r *http.Request) {
 </body>
 </html>`
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	_, _ = w.Write([]byte(html))
 }
 
 func (s *Server) handleRedoc(w http.ResponseWriter, r *http.Request) {
@@ -359,7 +359,7 @@ func (s *Server) handleRedoc(w http.ResponseWriter, r *http.Request) {
 </body>
 </html>`
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	_, _ = w.Write([]byte(html))
 }
 
 func (s *Server) handleOpenAPISpec(w http.ResponseWriter, r *http.Request) {

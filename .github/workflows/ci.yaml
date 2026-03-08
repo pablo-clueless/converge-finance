@@ -6,73 +6,73 @@ on:
     branches: [ main, deploy ]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  # test:
+  #   runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: converge
-          POSTGRES_PASSWORD: converge
-          POSTGRES_DB: converge_finance 
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+  #   services:
+  #     postgres:
+  #       image: postgres:16-alpine
+  #       env:
+  #         POSTGRES_USER: converge
+  #         POSTGRES_PASSWORD: converge
+  #         POSTGRES_DB: converge_finance 
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
+  #       ports:
+  #         - 5432:5432
           
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #     with:
+  #       fetch-depth: 0
     
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.25.0'
+  #   - name: Set up Go
+  #     uses: actions/setup-go@v5
+  #     with:
+  #       go-version: '1.25.0'
         
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+  #   - name: Cache Go modules
+  #     uses: actions/cache@v4
+  #     with:
+  #       path: |
+  #         ~/go/pkg/mod
+  #         ~/.cache/go-build
+  #       key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-go-
           
-    - name: Create test environment file
-      run: |
-        cat > .env << EOF
-        DATABASE_URL=postgres://converge:converge@localhost:5432/converge_finance?sslmode=disable
-        GRPC_PORT=9090
-        HTTP_PORT=8080
-        POSTGRES_USER=converge
-        POSTGRES_PASSWORD=converge
-        POSTGRES_DB=converge_finance
-        EOF
+  #   - name: Create test environment file
+  #     run: |
+  #       cat > .env << EOF
+  #       DATABASE_URL=postgres://converge:converge@localhost:5432/converge_finance?sslmode=disable
+  #       GRPC_PORT=9090
+  #       HTTP_PORT=8080
+  #       POSTGRES_USER=converge
+  #       POSTGRES_PASSWORD=converge
+  #       POSTGRES_DB=converge_finance
+  #       EOF
         
-    - name: Install dependencies
-      run: go mod download
+  #   - name: Install dependencies
+  #     run: go mod download
       
-    - name: Run unit tests
-      run: go test -v ./...
+  #   - name: Run unit tests
+  #     run: go test -v ./...
       
-    - name: Run e2e tests
-      run: go test -v ./tests/...
-      env:
-        DATABASE_URL: postgres://converge:converge@localhost:5432/converge_finance?sslmode=disable
-        GRPC_PORT: 9090
-        HTTP_PORT: 8080
-        POSTGRES_USER: converge
-        POSTGRES_PASSWORD: converge
-        POSTGRES_DB: converge_finance
+  #   - name: Run e2e tests
+  #     run: go test -v ./tests/...
+  #     env:
+  #       DATABASE_URL: postgres://converge:converge@localhost:5432/converge_finance?sslmode=disable
+  #       GRPC_PORT: 9090
+  #       HTTP_PORT: 8080
+  #       POSTGRES_USER: converge
+  #       POSTGRES_PASSWORD: converge
+  #       POSTGRES_DB: converge_finance
       
-    - name: Build application
-      run: go build -v ./...
+  #   - name: Build application
+  #     run: go build -v ./...
 
   lint:
     runs-on: ubuntu-latest

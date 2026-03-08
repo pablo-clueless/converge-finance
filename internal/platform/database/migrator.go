@@ -95,7 +95,7 @@ func dropAllSchemas(databaseURL string) error {
 				types = append(types, struct{ schema, name string }{schema, name})
 			}
 		}
-		rows.Close()
+		_ = rows.Close()
 		for _, t := range types {
 			_, _ = db.Exec(fmt.Sprintf("DROP TYPE IF EXISTS %s.%s CASCADE", t.schema, t.name))
 		}
