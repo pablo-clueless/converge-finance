@@ -45,22 +45,22 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 }
 
 type Entity struct {
-	ID                  string          `json:"id"`
-	Code                string          `json:"code"`
-	Name                string          `json:"name"`
-	BaseCurrency        string          `json:"base_currency"`
-	FiscalYearEndMonth  int             `json:"fiscal_year_end_month"`
-	IsActive            bool            `json:"is_active"`
-	Settings            json.RawMessage `json:"settings"`
-	CreatedAt           time.Time       `json:"created_at"`
-	UpdatedAt           time.Time       `json:"updated_at"`
+	ID                 string          `json:"id"`
+	Code               string          `json:"code"`
+	Name               string          `json:"name"`
+	BaseCurrency       string          `json:"base_currency"`
+	FiscalYearEndMonth int             `json:"fiscal_year_end_month"`
+	IsActive           bool            `json:"is_active"`
+	Settings           json.RawMessage `json:"settings"`
+	CreatedAt          time.Time       `json:"created_at"`
+	UpdatedAt          time.Time       `json:"updated_at"`
 }
 
 type EntitySettings struct {
-	EntityID                   string          `json:"entity_id"`
-	FiscalYearEndMonth         int             `json:"fiscal_year_end_month"`
-	Settings                   json.RawMessage `json:"settings"`
-	UpdatedAt                  time.Time       `json:"updated_at"`
+	EntityID           string          `json:"entity_id"`
+	FiscalYearEndMonth int             `json:"fiscal_year_end_month"`
+	Settings           json.RawMessage `json:"settings"`
+	UpdatedAt          time.Time       `json:"updated_at"`
 }
 
 type EntityHierarchyNode struct {
@@ -83,7 +83,7 @@ func (m *Module) listEntities(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch entities", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var entities []Entity
 	for rows.Next() {
@@ -355,7 +355,12 @@ func (m *Module) getHierarchy(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch hierarchy", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			m.logger.Error("Failed to close rows", zap.Error(err))
+		}
+	}()
 
 	var hierarchy []EntityHierarchyNode
 	for rows.Next() {
@@ -380,5 +385,5 @@ func (m *Module) getHierarchy(w http.ResponseWriter, r *http.Request) {
 func respondJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	_ = json.NewEncoder(w).Encode(data)
 }

@@ -68,7 +68,7 @@ func (s *BudgetService) CreateBudget(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.budget", budget.ID, "created", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "cost.budget", budget.ID, "created", map[string]any{
 			"budget_code": budget.BudgetCode,
 			"budget_type": budget.BudgetType,
 		})
@@ -175,7 +175,7 @@ func (s *BudgetService) SubmitBudget(ctx context.Context, budgetID common.ID) er
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.budget", budgetID, "submitted", nil)
+		_ = s.auditLogger.LogAction(ctx, "cost.budget", budgetID, "submitted", nil)
 	}
 
 	return nil
@@ -201,7 +201,7 @@ func (s *BudgetService) ApproveBudget(ctx context.Context, budgetID common.ID) e
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.budget", budgetID, "approved", nil)
+		_ = s.auditLogger.LogAction(ctx, "cost.budget", budgetID, "approved", nil)
 	}
 
 	return nil
@@ -227,7 +227,7 @@ func (s *BudgetService) RejectBudget(ctx context.Context, budgetID common.ID, re
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.budget", budgetID, "rejected", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "cost.budget", budgetID, "rejected", map[string]any{
 			"reason": reason,
 		})
 	}
@@ -250,7 +250,7 @@ func (s *BudgetService) ActivateBudget(ctx context.Context, budgetID common.ID) 
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.budget", budgetID, "activated", nil)
+		_ = s.auditLogger.LogAction(ctx, "cost.budget", budgetID, "activated", nil)
 	}
 
 	return nil
@@ -277,7 +277,7 @@ func (s *BudgetService) CreateBudgetVersion(ctx context.Context, budgetID common
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.budget", newVersion.ID, "version_created", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "cost.budget", newVersion.ID, "version_created", map[string]any{
 			"parent_version_id": budget.ID,
 			"version_number":    newVersion.VersionNumber,
 		})
@@ -382,7 +382,7 @@ func (s *BudgetService) RefreshActuals(ctx context.Context, entityID, fiscalPeri
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.actuals", common.NewID(), "refreshed", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "cost.actuals", common.NewID(), "refreshed", map[string]any{
 			"entity_id":        entityID,
 			"fiscal_period_id": fiscalPeriodID,
 		})
@@ -446,7 +446,7 @@ func (s *BudgetService) RequestBudgetTransfer(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.budget_transfer", transfer.ID, "requested", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "cost.budget_transfer", transfer.ID, "requested", map[string]any{
 			"budget_id":       budgetID,
 			"transfer_amount": transferAmount,
 		})
@@ -510,7 +510,7 @@ func (s *BudgetService) ApproveBudgetTransfer(ctx context.Context, transferID co
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.budget_transfer", transferID, "approved", nil)
+		_ = s.auditLogger.LogAction(ctx, "cost.budget_transfer", transferID, "approved", nil)
 	}
 
 	return nil

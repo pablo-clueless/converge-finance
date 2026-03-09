@@ -78,10 +78,11 @@ func NewVarianceAnalysis(
 		variancePercent = varianceAmount.Amount.InexactFloat64() / budgetAmount.Amount.InexactFloat64() * 100
 	}
 
-	isFavorable := false
-	if accountType == "revenue" {
+	var isFavorable bool
+	switch accountType {
+	case "revenue":
 		isFavorable = varianceAmount.IsPositive()
-	} else if accountType == "expense" {
+	case "expense":
 		isFavorable = varianceAmount.IsNegative()
 	}
 

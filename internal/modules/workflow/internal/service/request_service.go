@@ -132,13 +132,15 @@ func (s *RequestService) SubmitForApproval(ctx context.Context, req SubmitForApp
 		return nil, fmt.Errorf("failed to create pending approvals: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.submitted", map[string]any{
+	if err := s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.submitted", map[string]any{
 		"entity_id":      req.EntityID,
 		"document_type":  req.DocumentType,
 		"document_id":    req.DocumentID,
 		"workflow_id":    workflow.ID,
 		"request_number": requestNumber,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return request, nil
 }
@@ -283,11 +285,13 @@ func (s *RequestService) CancelRequest(ctx context.Context, requestID, actorID c
 		return fmt.Errorf("failed to update request: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.cancelled", map[string]any{
+	if err := s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.cancelled", map[string]any{
 		"entity_id":      request.EntityID,
 		"cancelled_by":   actorID,
 		"request_number": request.RequestNumber,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -335,12 +339,14 @@ func (s *RequestService) processApproval(ctx context.Context, request *domain.Ap
 		return s.advanceToNextStep(ctx, request, step)
 	}
 
-	s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.approved.step", map[string]any{
+	if err := s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.approved.step", map[string]any{
 		"step_number":    step.StepNumber,
 		"actor_id":       actorID,
 		"approval_count": approvalCount,
 		"required":       step.RequiredApprovals,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -381,11 +387,13 @@ func (s *RequestService) processApprovalWithDelegation(ctx context.Context, requ
 		return s.advanceToNextStep(ctx, request, step)
 	}
 
-	s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.approved.delegated", map[string]any{
+	if err := s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.approved.delegated", map[string]any{
 		"step_number":    step.StepNumber,
 		"actor_id":       actorID,
 		"delegated_from": delegatedFrom,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -424,11 +432,13 @@ func (s *RequestService) processRejection(ctx context.Context, request *domain.A
 		return fmt.Errorf("failed to update request: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.rejected", map[string]any{
+	if err := s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.rejected", map[string]any{
 		"step_number": step.StepNumber,
 		"actor_id":    actorID,
 		"comments":    comments,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -468,11 +478,13 @@ func (s *RequestService) processRejectionWithDelegation(ctx context.Context, req
 		return fmt.Errorf("failed to update request: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.rejected.delegated", map[string]any{
+	if err := s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.rejected.delegated", map[string]any{
 		"step_number":    step.StepNumber,
 		"actor_id":       actorID,
 		"delegated_from": delegatedFrom,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -498,10 +510,12 @@ func (s *RequestService) advanceToNextStep(ctx context.Context, request *domain.
 			return fmt.Errorf("failed to update request: %w", err)
 		}
 
-		s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.approved", map[string]any{
+		if err := s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.approved", map[string]any{
 			"entity_id":      request.EntityID,
 			"request_number": request.RequestNumber,
-		})
+		}); err != nil {
+			return fmt.Errorf("failed to log audit event: %w", err)
+		}
 
 		return nil
 	}
@@ -518,10 +532,12 @@ func (s *RequestService) advanceToNextStep(ctx context.Context, request *domain.
 		return fmt.Errorf("failed to create pending approvals: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.advanced", map[string]any{
+	if err := s.auditLogger.Log(ctx, "workflow_request", request.ID, "request.advanced", map[string]any{
 		"from_step": currentStep.StepNumber,
 		"to_step":   nextStep.StepNumber,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }

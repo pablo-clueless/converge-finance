@@ -33,7 +33,9 @@
       "Bash(go run:*)",
       "Bash(go vet:*)",
       "Bash(staticcheck:*)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Bash(golangci-lint run:*)",
+      "Bash(cd:*)"
     ]
   }
 }

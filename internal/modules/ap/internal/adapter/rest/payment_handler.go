@@ -291,7 +291,7 @@ func (h *PaymentHandler) Complete(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		BankReference string `json:"bank_reference"`
 	}
-	json.NewDecoder(r.Body).Decode(&req)
+	_ = json.NewDecoder(r.Body).Decode(&req)
 
 	if err := h.paymentService.CompletePayment(r.Context(), common.ID(id), req.BankReference); err != nil {
 		h.logger.Error("Failed to complete payment", zap.Error(err))

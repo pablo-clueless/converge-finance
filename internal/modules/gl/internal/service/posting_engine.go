@@ -69,7 +69,7 @@ func (e *PostingEngine) PostEntry(ctx context.Context, entryID common.ID) error 
 		}
 
 		if e.auditLogger != nil {
-			e.auditLogger.LogAction(ctx, "gl.journal_entry", entry.ID, "posted", map[string]any{
+			_ = e.auditLogger.LogAction(ctx, "gl.journal_entry", entry.ID, "posted", map[string]any{
 				"entry_number":  entry.EntryNumber,
 				"total_debits":  entry.TotalDebits().String(),
 				"total_credits": entry.TotalCredits().String(),
@@ -201,11 +201,11 @@ func (e *PostingEngine) ReverseEntry(ctx context.Context, entryID common.ID, rev
 		}
 
 		if e.auditLogger != nil {
-			e.auditLogger.LogAction(ctx, "gl.journal_entry", entry.ID, "reversed", map[string]any{
+			_ = e.auditLogger.LogAction(ctx, "gl.journal_entry", entry.ID, "reversed", map[string]any{
 				"reversal_entry_id":     reversal.ID,
 				"reversal_entry_number": reversal.EntryNumber,
 			})
-			e.auditLogger.LogAction(ctx, "gl.journal_entry", reversal.ID, "posted", map[string]any{
+			_ = e.auditLogger.LogAction(ctx, "gl.journal_entry", reversal.ID, "posted", map[string]any{
 				"is_reversal":    true,
 				"reversal_of_id": entry.ID,
 				"total_debits":   reversal.TotalDebits().String(),

@@ -115,10 +115,13 @@ func (s *RevaluationService) CreateRevaluationRun(ctx context.Context, req Creat
 		return nil, fmt.Errorf("failed to create revaluation run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.created", map[string]any{
+	err = s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.created", map[string]any{
 		"entity_id":  req.EntityID,
 		"run_number": runNumber,
 	})
+	if err != nil {
+		s.logger.Warn("failed to log audit event", zap.Error(err))
+	}
 
 	return run, nil
 }
@@ -281,11 +284,14 @@ func (s *RevaluationService) ExecuteRevaluation(ctx context.Context, req Execute
 		return nil, fmt.Errorf("failed to update run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.executed", map[string]any{
+	err = s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.executed", map[string]any{
 		"entity_id":          run.EntityID,
 		"run_number":         run.RunNumber,
 		"accounts_processed": len(details),
 	})
+	if err != nil {
+		s.logger.Warn("failed to log audit event", zap.Error(err))
+	}
 
 	return run, nil
 }
@@ -304,10 +310,13 @@ func (s *RevaluationService) SubmitForApproval(ctx context.Context, runID common
 		return nil, fmt.Errorf("failed to update run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.submitted", map[string]any{
+	err = s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.submitted", map[string]any{
 		"entity_id":  run.EntityID,
 		"run_number": run.RunNumber,
 	})
+	if err != nil {
+		s.logger.Warn("failed to log audit event", zap.Error(err))
+	}
 
 	return run, nil
 }
@@ -326,11 +335,14 @@ func (s *RevaluationService) ApproveRevaluation(ctx context.Context, runID, appr
 		return nil, fmt.Errorf("failed to update run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.approved", map[string]any{
+	err = s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.approved", map[string]any{
 		"entity_id":   run.EntityID,
 		"run_number":  run.RunNumber,
 		"approved_by": approverID,
 	})
+	if err != nil {
+		s.logger.Warn("failed to log audit event", zap.Error(err))
+	}
 
 	return run, nil
 }
@@ -355,12 +367,15 @@ func (s *RevaluationService) PostRevaluation(ctx context.Context, req PostRevalu
 		return nil, fmt.Errorf("failed to update run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.posted", map[string]any{
+	err = s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.posted", map[string]any{
 		"entity_id":        run.EntityID,
 		"run_number":       run.RunNumber,
 		"posted_by":        req.PosterID,
 		"journal_entry_id": req.JournalEntryID,
 	})
+	if err != nil {
+		s.logger.Warn("failed to log audit event", zap.Error(err))
+	}
 
 	return run, nil
 }
@@ -377,20 +392,23 @@ func (s *RevaluationService) ReverseRevaluation(ctx context.Context, req Reverse
 		return nil, err
 	}
 
-	if err := run.Reverse(req.ReversedBy, req.ReversalJournalID); err != nil {
+	if err = run.Reverse(req.ReversedBy, req.ReversalJournalID); err != nil {
 		return nil, err
 	}
 
-	if err := s.runRepo.Update(ctx, run); err != nil {
+	if err = s.runRepo.Update(ctx, run); err != nil {
 		return nil, fmt.Errorf("failed to update run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.reversed", map[string]any{
+	err = s.auditLogger.Log(ctx, "fx_revaluation", run.ID, "revaluation.run.reversed", map[string]any{
 		"entity_id":           run.EntityID,
 		"run_number":          run.RunNumber,
 		"reversed_by":         req.ReversedBy,
 		"reversal_journal_id": req.ReversalJournalID,
 	})
+	if err != nil {
+		s.logger.Warn("failed to log audit event", zap.Error(err))
+	}
 
 	return run, nil
 }

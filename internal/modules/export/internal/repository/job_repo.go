@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"converge-finance.com/m/internal/domain/common"
@@ -232,7 +233,12 @@ func (r *PostgresJobRepo) List(ctx context.Context, filter JobFilter) ([]domain.
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var jobs []domain.ExportJob
 	for rows.Next() {
@@ -285,7 +291,12 @@ func (r *PostgresJobRepo) ListExpired(ctx context.Context) ([]domain.ExportJob, 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var jobs []domain.ExportJob
 	for rows.Next() {
@@ -528,7 +539,12 @@ func (r *PostgresScheduleRepo) List(ctx context.Context, filter ScheduleFilter) 
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var schedules []domain.ExportSchedule
 	for rows.Next() {
@@ -573,7 +589,12 @@ func (r *PostgresScheduleRepo) ListDue(ctx context.Context) ([]domain.ExportSche
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var schedules []domain.ExportSchedule
 	for rows.Next() {

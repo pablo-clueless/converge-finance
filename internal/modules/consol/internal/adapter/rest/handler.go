@@ -24,9 +24,7 @@ func respondJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if data != nil {
-		if err := json.NewEncoder(w).Encode(data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		_ = json.NewEncoder(w).Encode(data)
 	}
 }
 
@@ -34,13 +32,6 @@ func respondError(w http.ResponseWriter, status int, message string) {
 	respondJSON(w, status, ErrorResponse{
 		Error:   http.StatusText(status),
 		Message: message,
-	})
-}
-
-func respondValidationError(w http.ResponseWriter, err *common.ValidationError) {
-	respondJSON(w, http.StatusBadRequest, ValidationErrorResponse{
-		Error:  "validation_error",
-		Errors: err.Errors,
 	})
 }
 
@@ -78,11 +69,6 @@ func getEntityID(r *http.Request) common.ID {
 		return common.ID(entityID)
 	}
 	return common.ID(r.Header.Get("X-Entity-ID"))
-}
-
-func getUserID(r *http.Request) common.ID {
-	userID := auth.GetUserIDFromContext(r.Context())
-	return common.ID(userID)
 }
 
 func getIntQuery(r *http.Request, name string, defaultValue int) int {

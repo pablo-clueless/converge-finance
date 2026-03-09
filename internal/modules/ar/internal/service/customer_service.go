@@ -103,10 +103,13 @@ func (s *CustomerService) CreateCustomer(ctx context.Context, req CreateCustomer
 		return nil, fmt.Errorf("failed to save customer: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "customer", customer.ID, "customer.created", map[string]any{
+	err = s.auditLogger.Log(ctx, "customer", customer.ID, "customer.created", map[string]any{
 		"customer_code": customer.CustomerCode,
 		"name":          customer.Name,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Customer created",
 		zap.String("customer_id", customer.ID.String()),
@@ -242,9 +245,12 @@ func (s *CustomerService) SuspendCustomer(ctx context.Context, id common.ID, rea
 		return fmt.Errorf("failed to suspend customer: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "customer", customer.ID, "customer.suspended", map[string]any{
+	err = s.auditLogger.Log(ctx, "customer", customer.ID, "customer.suspended", map[string]any{
 		"reason": reason,
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Customer suspended", zap.String("customer_id", id.String()))
 	return nil
@@ -262,9 +268,12 @@ func (s *CustomerService) ReleaseCreditHold(ctx context.Context, id common.ID, a
 		return fmt.Errorf("failed to release credit hold: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "customer", customer.ID, "customer.credit_hold_released", map[string]any{
+	err = s.auditLogger.Log(ctx, "customer", customer.ID, "customer.credit_hold_released", map[string]any{
 		"approved_by": approvedBy.String(),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Customer credit hold released", zap.String("customer_id", id.String()))
 	return nil
@@ -283,10 +292,13 @@ func (s *CustomerService) SetCreditLimit(ctx context.Context, id common.ID, limi
 		return fmt.Errorf("failed to set credit limit: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "customer", customer.ID, "customer.credit_limit_changed", map[string]any{
+	err = s.auditLogger.Log(ctx, "customer", customer.ID, "customer.credit_limit_changed", map[string]any{
 		"new_limit":   limit,
 		"approved_by": approvedBy.String(),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Customer credit limit updated", zap.String("customer_id", id.String()))
 	return nil

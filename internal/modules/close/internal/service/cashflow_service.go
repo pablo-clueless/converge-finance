@@ -68,11 +68,14 @@ func (s *CashFlowService) ConfigureAccountCashFlow(
 			return nil, fmt.Errorf("failed to update account cash flow config: %w", err)
 		}
 
-		s.auditLogger.Log(ctx, "account_cashflow_config", existing.ID, "update", map[string]any{
-			"account_id":   accountID,
-			"category":     category,
-			"is_cash":      isCashAccount,
+		err = s.auditLogger.Log(ctx, "account_cashflow_config", existing.ID, "update", map[string]any{
+			"account_id": accountID,
+			"category":   category,
+			"is_cash":    isCashAccount,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to log audit event: %w", err)
+		}
 
 		return existing, nil
 	}
@@ -88,11 +91,14 @@ func (s *CashFlowService) ConfigureAccountCashFlow(
 		return nil, fmt.Errorf("failed to create account cash flow config: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "account_cashflow_config", config.ID, "create", map[string]any{
-		"account_id":   accountID,
-		"category":     category,
-		"is_cash":      isCashAccount,
+	err = s.auditLogger.Log(ctx, "account_cashflow_config", config.ID, "create", map[string]any{
+		"account_id": accountID,
+		"category":   category,
+		"is_cash":    isCashAccount,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return config, nil
 }
@@ -120,10 +126,13 @@ func (s *CashFlowService) CreateTemplate(
 		return nil, fmt.Errorf("failed to create cash flow template: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "cashflow_template", template.ID, "create", map[string]any{
+	err := s.auditLogger.Log(ctx, "cashflow_template", template.ID, "create", map[string]any{
 		"template_code": templateCode,
 		"method":        method,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return template, nil
 }
@@ -177,7 +186,7 @@ func (s *CashFlowService) GenerateCashFlowStatement(
 	cashConfigs, err := s.configRepo.ListCashAccounts(ctx, entityID)
 	if err != nil {
 		run.Fail()
-		s.runRepo.Update(ctx, run)
+		_ = s.runRepo.Update(ctx, run)
 		return run, fmt.Errorf("failed to get cash accounts: %w", err)
 	}
 
@@ -214,14 +223,14 @@ func (s *CashFlowService) GenerateCashFlowStatement(
 
 	if err != nil {
 		run.Fail()
-		s.runRepo.Update(ctx, run)
+		_ = s.runRepo.Update(ctx, run)
 		return run, fmt.Errorf("failed to generate cash flow lines: %w", err)
 	}
 
 	// Save lines
 	if err := s.lineRepo.CreateBatch(ctx, lines); err != nil {
 		run.Fail()
-		s.runRepo.Update(ctx, run)
+		_ = s.runRepo.Update(ctx, run)
 		return run, fmt.Errorf("failed to save cash flow lines: %w", err)
 	}
 
@@ -240,13 +249,16 @@ func (s *CashFlowService) GenerateCashFlowStatement(
 		return nil, fmt.Errorf("failed to update cash flow run: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "cashflow_run", run.ID, "generate", map[string]any{
+	err = s.auditLogger.Log(ctx, "cashflow_run", run.ID, "generate", map[string]any{
 		"method":        method,
 		"period_id":     fiscalPeriodID,
 		"operating_net": operatingNet.String(),
 		"investing_net": investingNet.String(),
 		"financing_net": financingNet.String(),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return run, nil
 }
@@ -320,9 +332,10 @@ func (s *CashFlowService) generateIndirectMethod(
 
 		// Adjust sign based on account type for indirect method
 		adjustedAmount := change
-		if config.AdjustmentType == "add_back" {
+		switch config.AdjustmentType {
+		case "add_back":
 			adjustedAmount = change.Abs()
-		} else if config.AdjustmentType == "subtract" {
+		case "subtract":
 			adjustedAmount = change.Abs().Neg()
 		}
 
@@ -684,6 +697,10 @@ func (s *CashFlowService) DeleteCashFlowConfig(ctx context.Context, id common.ID
 		return fmt.Errorf("failed to delete account cash flow config: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "account_cashflow_config", id, "delete", nil)
+	err := s.auditLogger.Log(ctx, "account_cashflow_config", id, "delete", nil)
+	if err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
+
 	return nil
 }

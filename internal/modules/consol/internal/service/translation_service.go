@@ -61,12 +61,15 @@ func (s *TranslationService) CreateExchangeRate(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "consol.exchange_rate", rate.ID, "created", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "consol.exchange_rate", rate.ID, "created", map[string]any{
 			"from_currency": fromCurrency.Code,
 			"to_currency":   toCurrency.Code,
 			"rate_date":     rateDate,
 			"closing_rate":  closingRate,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to log audit event: %w", err)
+		}
 	}
 
 	return rate, nil
@@ -110,11 +113,14 @@ func (s *TranslationService) UpdateExchangeRate(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "consol.exchange_rate", rate.ID, "updated", map[string]any{
-			"closing_rate":   rate.ClosingRate,
-			"average_rate":   rate.AverageRate,
+		err = s.auditLogger.LogAction(ctx, "consol.exchange_rate", rate.ID, "updated", map[string]any{
+			"closing_rate":    rate.ClosingRate,
+			"average_rate":    rate.AverageRate,
 			"historical_rate": rate.HistoricalRate,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to log audit event: %w", err)
+		}
 	}
 
 	return rate, nil
@@ -237,7 +243,10 @@ func (s *TranslationService) DeleteExchangeRate(ctx context.Context, rateID comm
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "consol.exchange_rate", rateID, "deleted", nil)
+		err := s.auditLogger.LogAction(ctx, "consol.exchange_rate", rateID, "deleted", nil)
+		if err != nil {
+			return fmt.Errorf("failed to log audit event: %w", err)
+		}
 	}
 
 	return nil

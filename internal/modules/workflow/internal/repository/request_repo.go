@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"converge-finance.com/m/internal/domain/common"
@@ -14,7 +15,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// RequestRepository defines the interface for approval request persistence
 type RequestRepository interface {
 	Create(ctx context.Context, request *domain.ApprovalRequest) error
 	Update(ctx context.Context, request *domain.ApprovalRequest) error
@@ -25,7 +25,6 @@ type RequestRepository interface {
 	GenerateRequestNumber(ctx context.Context, entityID common.ID, prefix string) (string, error)
 }
 
-// ActionRepository defines the interface for approval action persistence
 type ActionRepository interface {
 	Create(ctx context.Context, action *domain.ApprovalAction) error
 	GetByID(ctx context.Context, id common.ID) (*domain.ApprovalAction, error)
@@ -34,7 +33,6 @@ type ActionRepository interface {
 	CountApprovalsByStep(ctx context.Context, requestID common.ID, stepNumber int) (int, error)
 }
 
-// PendingApprovalRepository defines the interface for pending approval persistence
 type PendingApprovalRepository interface {
 	Create(ctx context.Context, pending *domain.PendingApproval) error
 	Delete(ctx context.Context, id common.ID) error
@@ -49,7 +47,6 @@ type PendingApprovalRepository interface {
 	MarkEscalated(ctx context.Context, id common.ID) error
 }
 
-// RequestFilter contains filter criteria for listing requests
 type RequestFilter struct {
 	EntityID     common.ID
 	WorkflowID   common.ID
@@ -62,12 +59,10 @@ type RequestFilter struct {
 	Offset       int
 }
 
-// PostgresRequestRepo implements RequestRepository
 type PostgresRequestRepo struct {
 	db *database.PostgresDB
 }
 
-// NewPostgresRequestRepo creates a new PostgresRequestRepo
 func NewPostgresRequestRepo(db *database.PostgresDB) *PostgresRequestRepo {
 	return &PostgresRequestRepo{db: db}
 }
@@ -229,14 +224,12 @@ func (r *PostgresRequestRepo) List(ctx context.Context, filter RequestFilter) ([
 		argIdx++
 	}
 
-	// Count query
 	countQuery := `SELECT COUNT(*) ` + baseQuery
 	var total int
 	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
-	// Data query
 	dataQuery := `
 		SELECT id, entity_id, request_number, workflow_id, document_type,
 			   document_id, document_number, amount, currency_code,
@@ -258,25 +251,37 @@ func (r *PostgresRequestRepo) List(ctx context.Context, filter RequestFilter) ([
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var requests []domain.ApprovalRequest
 	for rows.Next() {
 		request, err := r.scanRequestRow(rows)
 		if err != nil {
-			return nil, 0, err
+			return nil, 0, fmt.Errorf("failed to scan request row: %w", err)
 		}
 		requests = append(requests, *request)
 	}
 
-	return requests, total, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("failed to iterate request rows: %w", err)
+	}
+
+	return requests, total, nil
 }
 
 func (r *PostgresRequestRepo) GenerateRequestNumber(ctx context.Context, entityID common.ID, prefix string) (string, error) {
 	query := `SELECT workflow.generate_request_number($1, $2)`
 	var requestNumber string
 	err := r.db.QueryRowContext(ctx, query, entityID, prefix).Scan(&requestNumber)
-	return requestNumber, err
+	if err != nil {
+		return "", fmt.Errorf("failed to generate request number: %w", err)
+	}
+	return requestNumber, nil
 }
 
 func (r *PostgresRequestRepo) scanRequest(row rowScanner) (*domain.ApprovalRequest, error) {
@@ -367,12 +372,10 @@ func (r *PostgresRequestRepo) scanRequestRow(rows *sql.Rows) (*domain.ApprovalRe
 	return &request, nil
 }
 
-// PostgresActionRepo implements ActionRepository
 type PostgresActionRepo struct {
 	db *database.PostgresDB
 }
 
-// NewPostgresActionRepo creates a new PostgresActionRepo
 func NewPostgresActionRepo(db *database.PostgresDB) *PostgresActionRepo {
 	return &PostgresActionRepo{db: db}
 }
@@ -424,18 +427,27 @@ func (r *PostgresActionRepo) GetByRequestID(ctx context.Context, requestID commo
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var actions []domain.ApprovalAction
 	for rows.Next() {
 		action, err := r.scanActionRow(rows)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan action row: %w", err)
 		}
 		actions = append(actions, *action)
 	}
 
-	return actions, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate action rows: %w", err)
+	}
+
+	return actions, nil
 }
 
 func (r *PostgresActionRepo) GetByRequestAndStep(ctx context.Context, requestID common.ID, stepNumber int) ([]domain.ApprovalAction, error) {
@@ -451,7 +463,12 @@ func (r *PostgresActionRepo) GetByRequestAndStep(ctx context.Context, requestID 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var actions []domain.ApprovalAction
 	for rows.Next() {
@@ -462,7 +479,11 @@ func (r *PostgresActionRepo) GetByRequestAndStep(ctx context.Context, requestID 
 		actions = append(actions, *action)
 	}
 
-	return actions, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate action rows: %w", err)
+	}
+
+	return actions, nil
 }
 
 func (r *PostgresActionRepo) CountApprovalsByStep(ctx context.Context, requestID common.ID, stepNumber int) (int, error) {
@@ -474,7 +495,10 @@ func (r *PostgresActionRepo) CountApprovalsByStep(ctx context.Context, requestID
 
 	var count int
 	err := r.db.QueryRowContext(ctx, query, requestID, stepNumber).Scan(&count)
-	return count, err
+	if err != nil {
+		return 0, fmt.Errorf("failed to count approvals by step: %w", err)
+	}
+	return count, nil
 }
 
 func (r *PostgresActionRepo) scanAction(row rowScanner) (*domain.ApprovalAction, error) {
@@ -496,7 +520,7 @@ func (r *PostgresActionRepo) scanAction(row rowScanner) (*domain.ApprovalAction,
 		return nil, domain.ErrActionNotFound
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to scan action row: %w", err)
 	}
 
 	return &action, nil
@@ -523,12 +547,10 @@ func (r *PostgresActionRepo) scanActionRow(rows *sql.Rows) (*domain.ApprovalActi
 	return &action, nil
 }
 
-// PostgresPendingApprovalRepo implements PendingApprovalRepository
 type PostgresPendingApprovalRepo struct {
 	db *database.PostgresDB
 }
 
-// NewPostgresPendingApprovalRepo creates a new PostgresPendingApprovalRepo
 func NewPostgresPendingApprovalRepo(db *database.PostgresDB) *PostgresPendingApprovalRepo {
 	return &PostgresPendingApprovalRepo{db: db}
 }
@@ -610,7 +632,12 @@ func (r *PostgresPendingApprovalRepo) GetByApprover(ctx context.Context, approve
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var pending []domain.PendingApproval
 	for rows.Next() {
@@ -637,7 +664,12 @@ func (r *PostgresPendingApprovalRepo) GetByRequest(ctx context.Context, requestI
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var pending []domain.PendingApproval
 	for rows.Next() {
@@ -681,7 +713,12 @@ func (r *PostgresPendingApprovalRepo) GetOverdue(ctx context.Context, entityID c
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var pending []domain.PendingApproval
 	for rows.Next() {

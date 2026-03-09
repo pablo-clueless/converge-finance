@@ -65,10 +65,12 @@ func (s *AllocationService) CreateAllocationRule(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.allocation_rule", rule.ID, "created", map[string]any{
+		if err := s.auditLogger.LogAction(ctx, "cost.allocation_rule", rule.ID, "created", map[string]any{
 			"rule_code":         rule.RuleCode,
 			"allocation_method": rule.AllocationMethod,
-		})
+		}); err != nil {
+			return nil, fmt.Errorf("failed to log audit event: %w", err)
+		}
 	}
 
 	return rule, nil
@@ -155,10 +157,12 @@ func (s *AllocationService) InitiateAllocationRun(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "initiated", map[string]any{
+		if err := s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "initiated", map[string]any{
 			"run_number":       run.RunNumber,
 			"fiscal_period_id": fiscalPeriodID,
-		})
+		}); err != nil {
+			return nil, fmt.Errorf("failed to log audit event: %w", err)
+		}
 	}
 
 	return run, nil
@@ -269,10 +273,12 @@ func (s *AllocationService) ExecuteAllocation(ctx context.Context, runID common.
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "completed", map[string]any{
+		if err := s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "completed", map[string]any{
 			"rules_executed":  rulesExecuted,
 			"total_allocated": totalAllocated,
-		})
+		}); err != nil {
+			return fmt.Errorf("failed to log audit event: %w", err)
+		}
 	}
 
 	return nil
@@ -345,9 +351,12 @@ func (s *AllocationService) PostAllocation(ctx context.Context, runID common.ID)
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "posted", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "posted", map[string]any{
 			"journal_entry_id": je.ID,
 		})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -380,7 +389,10 @@ func (s *AllocationService) ReverseAllocation(ctx context.Context, runID common.
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "reversed", nil)
+		err = s.auditLogger.LogAction(ctx, "cost.allocation_run", run.ID, "reversed", nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

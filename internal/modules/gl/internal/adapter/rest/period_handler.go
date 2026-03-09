@@ -265,7 +265,7 @@ func (h *PeriodHandler) CreateFiscalYear(w http.ResponseWriter, r *http.Request)
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogCreate(ctx, "gl.fiscal_year", fiscalYear.ID, map[string]any{
+		_ = h.auditLogger.LogCreate(ctx, "gl.fiscal_year", fiscalYear.ID, map[string]any{
 			"year_code":  fiscalYear.YearCode,
 			"start_date": fiscalYear.StartDate,
 			"end_date":   fiscalYear.EndDate,
@@ -315,7 +315,7 @@ func (h *PeriodHandler) CloseFiscalYear(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.fiscal_year", fiscalYear.ID, "closed", nil)
+		_ = h.auditLogger.LogAction(ctx, "gl.fiscal_year", fiscalYear.ID, "closed", nil)
 	}
 
 	respondJSON(w, http.StatusOK, toFiscalYearResponse(fiscalYear))
@@ -465,7 +465,7 @@ func (h *PeriodHandler) OpenPeriod(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.period", period.ID, "opened", nil)
+		_ = h.auditLogger.LogAction(ctx, "gl.period", period.ID, "opened", nil)
 	}
 
 	respondJSON(w, http.StatusOK, toPeriodResponse(period))
@@ -503,7 +503,7 @@ func (h *PeriodHandler) ClosePeriod(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.period", period.ID, "closed", nil)
+		_ = h.auditLogger.LogAction(ctx, "gl.period", period.ID, "closed", nil)
 	}
 
 	respondJSON(w, http.StatusOK, toPeriodResponse(period))
@@ -541,7 +541,10 @@ func (h *PeriodHandler) ReopenPeriod(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.period", period.ID, "reopened", nil)
+		err = h.auditLogger.LogAction(ctx, "gl.period", period.ID, "reopened", nil)
+		if err != nil {
+			h.logger.Error("Failed to log reopened period action", zap.Error(err))
+		}
 	}
 
 	respondJSON(w, http.StatusOK, toPeriodResponse(period))

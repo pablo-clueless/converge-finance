@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"converge-finance.com/m/internal/domain/common"
@@ -272,7 +273,12 @@ func (r *PostgresDocumentRepo) List(ctx context.Context, filter DocumentFilter) 
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var documents []domain.Document
 	for rows.Next() {
@@ -469,7 +475,12 @@ func (r *PostgresDocumentVersionRepo) GetByDocumentID(ctx context.Context, docum
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var versions []domain.DocumentVersion
 	for rows.Next() {
@@ -669,7 +680,12 @@ func (r *PostgresStorageConfigRepo) List(ctx context.Context, entityID *common.I
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var configs []domain.StorageConfig
 	for rows.Next() {
@@ -895,7 +911,12 @@ func (r *PostgresRetentionPolicyRepo) List(ctx context.Context, entityID *common
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var policies []domain.RetentionPolicy
 	for rows.Next() {

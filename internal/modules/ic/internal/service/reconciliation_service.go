@@ -230,7 +230,7 @@ func (s *ReconciliationService) AutoReconcile(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.reconciliation", common.NewID(), "auto_reconcile", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "ic.reconciliation", common.NewID(), "auto_reconcile", map[string]any{
 			"from_entity_id":   fromEntityID,
 			"to_entity_id":     toEntityID,
 			"fiscal_period_id": fiscalPeriodID,
@@ -317,7 +317,7 @@ func (s *ReconciliationService) MarkBalanceReconciled(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.balance", balanceID, "reconciled", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "ic.balance", balanceID, "reconciled", map[string]any{
 			"reconciled_at": time.Now(),
 		})
 	}

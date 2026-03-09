@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	"converge-finance.com/m/internal/domain/common"
 	"converge-finance.com/m/internal/modules/workflow/internal/domain"
@@ -229,7 +230,12 @@ func (r *PostgresWorkflowRepo) List(ctx context.Context, filter WorkflowFilter) 
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var workflows []domain.Workflow
 	for rows.Next() {
@@ -455,7 +461,12 @@ func (r *PostgresWorkflowStepRepo) GetByWorkflowID(ctx context.Context, workflow
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var steps []domain.WorkflowStep
 	for rows.Next() {
@@ -691,7 +702,12 @@ func (r *PostgresDelegationRepo) GetActiveDelegations(ctx context.Context, entit
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var delegations []domain.Delegation
 	for rows.Next() {
@@ -742,7 +758,12 @@ func (r *PostgresDelegationRepo) ListByEntity(ctx context.Context, entityID comm
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var delegations []domain.Delegation
 	for rows.Next() {

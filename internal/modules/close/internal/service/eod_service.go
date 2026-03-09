@@ -69,10 +69,13 @@ func (s *EODService) InitializeBusinessDate(ctx context.Context, entityID common
 		return nil, fmt.Errorf("failed to create business date: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "business_date", bd.ID, "initialize", map[string]interface{}{
+	err = s.auditLogger.Log(ctx, "business_date", bd.ID, "initialize", map[string]interface{}{
 		"entity_id":    entityID,
 		"initial_date": initialDate.Format("2006-01-02"),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return bd, nil
 }
@@ -110,7 +113,6 @@ func (s *EODService) CreateOrUpdateEODConfig(ctx context.Context, cfg *domain.EO
 }
 
 func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDate time.Time, userID common.ID) (*domain.EODRun, error) {
-
 	existing, err := s.eodRunRepo.GetByBusinessDate(ctx, entityID, businessDate)
 	if err == nil && existing != nil && existing.Status == domain.EODStatusCompleted {
 		return nil, fmt.Errorf("EOD already completed for %s", businessDate.Format("2006-01-02"))
@@ -129,7 +131,14 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			_ = s.auditLogger.Log(ctx, "eod_run", existing.ID, "failed", map[string]interface{}{
+				"business_date": businessDate.Format("2006-01-02"),
+				"error":         rbErr.Error(),
+			})
+		}
+	}()
 
 	run := domain.NewEODRun(entityID, businessDate, userID)
 	run.SetTotalTasks(len(tasks))
@@ -151,26 +160,35 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 	if err := run.Start(); err != nil {
 		return nil, err
 	}
-	s.eodRunRepo.WithTx(tx).Update(ctx, run)
+
+	if err := s.eodRunRepo.WithTx(tx).Update(ctx, run); err != nil {
+		return nil, fmt.Errorf("failed to update EOD run: %w", err)
+	}
 
 	for i := range taskRuns {
 		tr := &taskRuns[i]
 		task := &tasks[i]
 
 		if err := s.executeTask(ctx, tx, run, tr, task); err != nil {
-			tr.Fail(err.Error())
+			_ = tr.Fail(err.Error())
 			run.IncrementTaskCount(0, 1, 0)
 
 			if task.IsRequired {
-				run.Fail(fmt.Sprintf("Required task %s failed: %s", task.TaskCode, err.Error()))
-				s.eodRunRepo.WithTx(tx).Update(ctx, run)
-				s.eodTaskRunRepo.WithTx(tx).Update(ctx, tr)
-				tx.Commit()
+				_ = run.Fail(fmt.Sprintf("Required task %s failed: %s", task.TaskCode, err.Error()))
+				if updateErr := s.eodRunRepo.WithTx(tx).Update(ctx, run); updateErr != nil {
+					return nil, fmt.Errorf("failed to update EOD run: %w", updateErr)
+				}
+				if updateErr := s.eodTaskRunRepo.WithTx(tx).Update(ctx, tr); updateErr != nil {
+					return nil, fmt.Errorf("failed to update task run: %w", updateErr)
+				}
+				if commitErr := tx.Commit(); commitErr != nil {
+					return nil, fmt.Errorf("failed to commit transaction: %w", commitErr)
+				}
 
-				s.auditLogger.Log(ctx, "eod_run", run.ID, "failed", map[string]interface{}{
+				_ = s.auditLogger.Log(ctx, "eod_run", existing.ID, "failed", map[string]interface{}{
 					"business_date": businessDate.Format("2006-01-02"),
 					"failed_task":   task.TaskCode,
-					"error":         err.Error(),
+					"error":         err,
 				})
 
 				return run, err
@@ -179,7 +197,9 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 			run.IncrementTaskCount(1, 0, 0)
 		}
 
-		s.eodTaskRunRepo.WithTx(tx).Update(ctx, tr)
+		if err = s.eodTaskRunRepo.WithTx(tx).Update(ctx, tr); err != nil {
+			return nil, fmt.Errorf("failed to update task run: %w", err)
+		}
 	}
 
 	if err := run.Complete(); err != nil {
@@ -197,7 +217,7 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 		bd, err := s.businessDateRepo.GetByEntityID(ctx, entityID)
 		if err == nil && bd != nil {
 			bd.Rollover(nextDate, run.ID)
-			s.businessDateRepo.WithTx(tx).Update(ctx, bd)
+			_ = s.businessDateRepo.WithTx(tx).Update(ctx, bd)
 		}
 	}
 
@@ -205,17 +225,20 @@ func (s *EODService) RunEOD(ctx context.Context, entityID common.ID, businessDat
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "eod_run", run.ID, "completed", map[string]interface{}{
+	err = s.auditLogger.Log(ctx, "eod_run", run.ID, "completed", map[string]interface{}{
 		"business_date":   businessDate.Format("2006-01-02"),
 		"tasks_completed": run.CompletedTasks,
 		"tasks_failed":    run.FailedTasks,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	run.TaskRuns = taskRuns
 	return run, nil
 }
 
-func (s *EODService) executeTask(ctx context.Context, tx interface{}, run *domain.EODRun, tr *domain.EODTaskRun, task *domain.EODTask) error {
+func (s *EODService) executeTask(ctx context.Context, _ any, run *domain.EODRun, tr *domain.EODTaskRun, task *domain.EODTask) error {
 	if err := tr.Start(); err != nil {
 		return err
 	}
@@ -262,7 +285,7 @@ func (s *EODService) executeTask(ctx context.Context, tx interface{}, run *domai
 	return tr.Complete(recordsProcessed, recordsFailed, summary)
 }
 
-func (s *EODService) taskValidateTransactions(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskValidateTransactions(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"validated":    true,
@@ -274,7 +297,7 @@ func (s *EODService) taskValidateTransactions(ctx context.Context, run *domain.E
 	return 0, 0, summary
 }
 
-func (s *EODService) taskPostPendingBatches(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskPostPendingBatches(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"batches_posted": 0,
@@ -285,7 +308,7 @@ func (s *EODService) taskPostPendingBatches(ctx context.Context, run *domain.EOD
 	return 0, 0, summary
 }
 
-func (s *EODService) taskRunReconciliation(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskRunReconciliation(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"accounts_checked":    0,
@@ -297,7 +320,7 @@ func (s *EODService) taskRunReconciliation(ctx context.Context, run *domain.EODR
 	return 0, 0, summary
 }
 
-func (s *EODService) taskCalculateAccruals(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskCalculateAccruals(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"accruals_calculated": 0,
@@ -308,7 +331,7 @@ func (s *EODService) taskCalculateAccruals(ctx context.Context, run *domain.EODR
 	return 0, 0, summary
 }
 
-func (s *EODService) taskFXRateUpdate(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskFXRateUpdate(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"rates_updated": 0,
@@ -319,7 +342,7 @@ func (s *EODService) taskFXRateUpdate(ctx context.Context, run *domain.EODRun, t
 	return 0, 0, summary
 }
 
-func (s *EODService) taskGenerateDailyReports(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskGenerateDailyReports(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"reports_generated": 0,
@@ -330,7 +353,7 @@ func (s *EODService) taskGenerateDailyReports(ctx context.Context, run *domain.E
 	return 0, 0, summary
 }
 
-func (s *EODService) taskValidateBalances(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskValidateBalances(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"is_balanced":   true,
@@ -343,7 +366,7 @@ func (s *EODService) taskValidateBalances(ctx context.Context, run *domain.EODRu
 	return 0, 0, summary
 }
 
-func (s *EODService) taskRolloverDate(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskRolloverDate(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"status": "deferred_to_completion",
@@ -353,7 +376,7 @@ func (s *EODService) taskRolloverDate(ctx context.Context, run *domain.EODRun, t
 	return 1, 0, summary
 }
 
-func (s *EODService) taskCustom(ctx context.Context, run *domain.EODRun, task *domain.EODTask) (int, int, json.RawMessage) {
+func (s *EODService) taskCustom(_ context.Context, _ *domain.EODRun, _ *domain.EODTask) (int, int, json.RawMessage) {
 
 	result := map[string]interface{}{
 		"status": "completed",
@@ -410,11 +433,13 @@ func (s *EODService) RolloverBusinessDate(ctx context.Context, entityID common.I
 		return nil, fmt.Errorf("failed to update business date: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "business_date", bd.ID, "rollover", map[string]interface{}{
+	if err := s.auditLogger.Log(ctx, "business_date", bd.ID, "rollover", map[string]interface{}{
 		"from_date": bd.LastEODDate.Format("2006-01-02"),
 		"to_date":   bd.CurrentBusinessDate.Format("2006-01-02"),
 		"user_id":   userID,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return bd, nil
 }
@@ -446,10 +471,13 @@ func (s *EODService) CreateEODTask(ctx context.Context, task *domain.EODTask) (*
 		return nil, fmt.Errorf("failed to create EOD task: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "eod_task", task.ID, "create", map[string]interface{}{
+	err := s.auditLogger.Log(ctx, "eod_task", task.ID, "create", map[string]interface{}{
 		"task_code": task.TaskCode,
 		"task_type": task.TaskType,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return task, nil
 }

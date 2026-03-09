@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	"converge-finance.com/m/internal/domain/common"
 	"converge-finance.com/m/internal/modules/close/internal/domain"
@@ -217,7 +218,7 @@ func (r *PostgresAccountCashFlowConfigRepo) ListByEntity(ctx context.Context, en
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var configs []domain.AccountCashFlowConfig
 	for rows.Next() {
@@ -263,7 +264,7 @@ func (r *PostgresAccountCashFlowConfigRepo) ListCashAccounts(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var configs []domain.AccountCashFlowConfig
 	for rows.Next() {
@@ -419,7 +420,7 @@ func (r *PostgresCashFlowTemplateRepo) scanTemplates(rows *sql.Rows, err error) 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var templates []domain.CashFlowTemplate
 	for rows.Next() {
@@ -644,7 +645,12 @@ func (r *PostgresCashFlowRunRepo) List(ctx context.Context, filter CashFlowRunFi
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var runs []domain.CashFlowRun
 	for rows.Next() {
@@ -757,7 +763,12 @@ func (r *PostgresCashFlowLineRepo) GetByRunID(ctx context.Context, runID common.
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var lines []domain.CashFlowLine
 	for rows.Next() {

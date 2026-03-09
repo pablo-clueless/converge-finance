@@ -23,9 +23,7 @@ func respondJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if data != nil {
-		if err := json.NewEncoder(w).Encode(data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		_ = json.NewEncoder(w).Encode(data)
 	}
 }
 
@@ -103,14 +101,6 @@ func getBoolQuery(r *http.Request, name string) *bool {
 	}
 	boolValue := value == "true" || value == "1"
 	return &boolValue
-}
-
-func getStringQuery(r *http.Request, name string) *string {
-	value := r.URL.Query().Get(name)
-	if value == "" {
-		return nil
-	}
-	return &value
 }
 
 func decodeJSON(r *http.Request, v any) error {

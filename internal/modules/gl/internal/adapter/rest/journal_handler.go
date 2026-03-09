@@ -365,7 +365,7 @@ func (h *JournalHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogCreate(ctx, "gl.journal_entry", entry.ID, map[string]any{
+		_ = h.auditLogger.LogCreate(ctx, "gl.journal_entry", entry.ID, map[string]any{
 			"entry_number": entry.EntryNumber,
 			"description":  entry.Description,
 			"total_debit":  entry.TotalDebits().String(),
@@ -419,7 +419,7 @@ func (h *JournalHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogUpdate(ctx, "gl.journal_entry", entry.ID, map[string]any{
+		_ = h.auditLogger.LogUpdate(ctx, "gl.journal_entry", entry.ID, map[string]any{
 			"description": entry.Description,
 		})
 	}
@@ -487,7 +487,7 @@ func (h *JournalHandler) Submit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.auditLogger != nil {
-		h.auditLogger.LogAction(ctx, "gl.journal_entry", entry.ID, "submitted", nil)
+		_ = h.auditLogger.LogAction(ctx, "gl.journal_entry", entry.ID, "submitted", nil)
 	}
 
 	respondJSON(w, http.StatusOK, toJournalEntryResponse(entry))

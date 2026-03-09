@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	"converge-finance.com/m/internal/domain/common"
 	"converge-finance.com/m/internal/modules/segment/internal/domain"
@@ -228,7 +229,12 @@ func (r *PostgresSegmentRepo) List(ctx context.Context, filter SegmentFilter) ([
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var segments []domain.Segment
 	for rows.Next() {
@@ -274,7 +280,12 @@ func (r *PostgresSegmentRepo) GetTree(ctx context.Context, entityID common.ID, s
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var allSegments []domain.Segment
 	segmentMap := make(map[common.ID]*domain.Segment)
@@ -324,7 +335,12 @@ func (r *PostgresSegmentRepo) GetChildren(ctx context.Context, parentID common.I
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var segments []domain.Segment
 	for rows.Next() {
@@ -533,7 +549,12 @@ func (r *PostgresSegmentHierarchyRepo) List(ctx context.Context, entityID common
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var hierarchies []domain.SegmentHierarchy
 	for rows.Next() {
@@ -725,7 +746,12 @@ func (r *PostgresIntersegmentTransactionRepo) List(ctx context.Context, filter I
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var transactions []domain.IntersegmentTransaction
 	for rows.Next() {

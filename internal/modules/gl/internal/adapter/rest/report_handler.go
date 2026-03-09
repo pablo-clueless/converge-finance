@@ -353,10 +353,10 @@ func (h *ReportHandler) BalanceSheet(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		balance := decimal.Zero
 		debitDec := decimal.NewFromFloat(debit)
 		creditDec := decimal.NewFromFloat(credit)
 
+		var balance decimal.Decimal
 		if account.NormalBalance == domain.BalanceTypeDebit {
 			balance = debitDec.Sub(creditDec)
 		} else {
@@ -482,15 +482,13 @@ func (h *ReportHandler) IncomeStatement(w http.ResponseWriter, r *http.Request) 
 			continue
 		}
 
-		amount := decimal.Zero
 		debitDec := decimal.NewFromFloat(debit)
 		creditDec := decimal.NewFromFloat(credit)
 
+		var amount decimal.Decimal
 		if account.Type == domain.AccountTypeRevenue {
-
 			amount = creditDec.Sub(debitDec)
 		} else {
-
 			amount = debitDec.Sub(creditDec)
 		}
 

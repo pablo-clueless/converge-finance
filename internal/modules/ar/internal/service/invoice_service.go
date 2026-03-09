@@ -162,11 +162,14 @@ func (s *InvoiceService) CreateInvoice(ctx context.Context, req CreateInvoiceReq
 		return nil, fmt.Errorf("failed to save invoice: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "ar_invoice", invoice.ID, "invoice.created", map[string]any{
+	err = s.auditLogger.Log(ctx, "ar_invoice", invoice.ID, "invoice.created", map[string]any{
 		"invoice_number": invoice.InvoiceNumber,
 		"customer_id":    customer.ID.String(),
 		"total_amount":   invoice.TotalAmount.Amount.String(),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("AR Invoice created",
 		zap.String("invoice_id", invoice.ID.String()),
@@ -269,10 +272,13 @@ func (s *InvoiceService) ApproveInvoice(ctx context.Context, id common.ID, appro
 		s.logger.Error("Failed to update customer balance", zap.Error(err))
 	}
 
-	s.auditLogger.Log(ctx, "ar_invoice", invoice.ID, "invoice.approved", map[string]any{
+	err = s.auditLogger.Log(ctx, "ar_invoice", invoice.ID, "invoice.approved", map[string]any{
 		"journal_entry_id": journalEntry.ID.String(),
 		"approved_by":      approvedBy.String(),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Invoice approved and posted",
 		zap.String("invoice_id", id.String()),
@@ -394,12 +400,15 @@ func (s *InvoiceService) VoidInvoice(ctx context.Context, id common.ID, reason s
 	if err == nil {
 		newBalance := customer.CurrentBalance.MustSubtract(invoice.TotalAmount)
 		customer.UpdateBalance(newBalance)
-		s.customerRepo.Update(ctx, customer)
+		_ = s.customerRepo.Update(ctx, customer)
 	}
 
-	s.auditLogger.Log(ctx, "ar_invoice", invoice.ID, "invoice.voided", map[string]any{
+	err = s.auditLogger.Log(ctx, "ar_invoice", invoice.ID, "invoice.voided", map[string]any{
 		"reason": reason,
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Invoice voided",
 		zap.String("invoice_id", id.String()),
@@ -429,13 +438,16 @@ func (s *InvoiceService) WriteOffInvoice(ctx context.Context, id common.ID, reas
 	if err == nil {
 		newBalance := customer.CurrentBalance.MustSubtract(writeOffAmount)
 		customer.UpdateBalance(newBalance)
-		s.customerRepo.Update(ctx, customer)
+		_ = s.customerRepo.Update(ctx, customer)
 	}
 
-	s.auditLogger.Log(ctx, "ar_invoice", invoice.ID, "invoice.written_off", map[string]any{
+	err = s.auditLogger.Log(ctx, "ar_invoice", invoice.ID, "invoice.written_off", map[string]any{
 		"reason": reason,
 		"amount": writeOffAmount.Amount.String(),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Invoice written off",
 		zap.String("invoice_id", id.String()),

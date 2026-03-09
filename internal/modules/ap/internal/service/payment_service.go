@@ -133,12 +133,15 @@ func (s *PaymentService) CreatePayment(ctx context.Context, req CreatePaymentReq
 		return nil, fmt.Errorf("failed to save payment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.created", map[string]any{
+	err = s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.created", map[string]any{
 		"payment_number": payment.PaymentNumber,
 		"vendor_id":      vendor.ID.String(),
 		"amount":         payment.Amount.Amount.String(),
 		"allocations":    len(payment.Allocations),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("AP Payment created",
 		zap.String("payment_id", payment.ID.String()),
@@ -219,9 +222,12 @@ func (s *PaymentService) ApprovePayment(ctx context.Context, id common.ID, appro
 		return fmt.Errorf("failed to approve payment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.approved", map[string]any{
+	err = s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.approved", map[string]any{
 		"approved_by": approvedBy.String(),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	s.logger.Info("Payment approved",
 		zap.String("payment_id", id.String()),
@@ -325,9 +331,12 @@ func (s *PaymentService) ProcessPayment(ctx context.Context, id common.ID) error
 		return fmt.Errorf("failed to update payment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.processed", map[string]any{
+	err = s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.processed", map[string]any{
 		"journal_entry_id": journalEntry.ID.String(),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	s.logger.Info("Payment processed",
 		zap.String("payment_id", id.String()),
@@ -364,9 +373,10 @@ func (s *PaymentService) postPaymentToGL(ctx context.Context, payment *domain.Pa
 		Credit:      payment.Amount,
 	})
 
-	if !payment.DiscountTaken.IsZero() {
-
-	}
+	// TODO: Handle discount taken when discount accounts are configured
+	// if !payment.DiscountTaken.IsZero() {
+	//     Add discount journal line
+	// }
 
 	req := gl.CreateJournalEntryRequest{
 		EntityID:     payment.EntityID,
@@ -406,12 +416,18 @@ func (s *PaymentService) CompletePayment(ctx context.Context, id common.ID, bank
 	if err == nil {
 		newBalance := vendor.CurrentBalance.MustSubtract(payment.Amount)
 		vendor.UpdateBalance(newBalance)
-		s.vendorRepo.Update(ctx, vendor)
+		err = s.vendorRepo.Update(ctx, vendor)
+		if err != nil {
+			s.logger.Fatal("unable to update vendor")
+		}
 	}
 
-	s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.completed", map[string]any{
+	err = s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.completed", map[string]any{
 		"bank_reference": bankReference,
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	s.logger.Info("Payment completed",
 		zap.String("payment_id", id.String()),
@@ -452,16 +468,22 @@ func (s *PaymentService) FailPayment(ctx context.Context, id common.ID, reason s
 			continue
 		}
 
-		s.invoiceRepo.Update(ctx, invoice)
+		err = s.invoiceRepo.Update(ctx, invoice)
+		if err != nil {
+			s.logger.Fatal("unable to update invoice")
+		}
 	}
 
 	if err := s.paymentRepo.Update(ctx, payment); err != nil {
 		return fmt.Errorf("failed to update payment: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.failed", map[string]any{
+	err = s.auditLogger.Log(ctx, "ap_payment", payment.ID, "payment.failed", map[string]any{
 		"reason": reason,
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	s.logger.Info("Payment failed",
 		zap.String("payment_id", id.String()),
@@ -498,7 +520,7 @@ func (s *PaymentService) VoidPayment(ctx context.Context, id common.ID) error {
 			continue
 		}
 
-		s.invoiceRepo.Update(ctx, invoice)
+		_ = s.invoiceRepo.Update(ctx, invoice)
 	}
 
 	if err := payment.Void(); err != nil {

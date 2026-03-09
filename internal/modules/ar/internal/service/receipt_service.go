@@ -133,12 +133,15 @@ func (s *ReceiptService) CreateReceipt(ctx context.Context, req CreateReceiptReq
 		return nil, fmt.Errorf("failed to save receipt: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "ar_receipt", receipt.ID, "receipt.created", map[string]any{
+	err = s.auditLogger.Log(ctx, "ar_receipt", receipt.ID, "receipt.created", map[string]any{
 		"receipt_number": receipt.ReceiptNumber,
 		"customer_id":    customer.ID.String(),
 		"amount":         receipt.Amount.Amount.String(),
 		"applications":   len(receipt.Applications),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Receipt created",
 		zap.String("receipt_id", receipt.ID.String()),
@@ -233,7 +236,7 @@ func (s *ReceiptService) ConfirmReceipt(ctx context.Context, id common.ID) error
 	}
 
 	if receipt.IsFullyApplied() {
-		receipt.MarkApplied()
+		_ = receipt.MarkApplied()
 	}
 
 	if err := s.receiptRepo.Update(ctx, receipt); err != nil {
@@ -244,16 +247,19 @@ func (s *ReceiptService) ConfirmReceipt(ctx context.Context, id common.ID) error
 	customer.UpdateBalance(newBalance)
 
 	if customer.OnCreditHold && !customer.ShouldTriggerCreditHold() {
-
+		customer.OnCreditHold = false
 	}
 
 	if err := s.customerRepo.Update(ctx, customer); err != nil {
 		s.logger.Error("Failed to update customer balance", zap.Error(err))
 	}
 
-	s.auditLogger.Log(ctx, "ar_receipt", receipt.ID, "receipt.confirmed", map[string]any{
+	err = s.auditLogger.Log(ctx, "ar_receipt", receipt.ID, "receipt.confirmed", map[string]any{
 		"journal_entry_id": journalEntry.ID.String(),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Receipt confirmed and posted",
 		zap.String("receipt_id", id.String()),
@@ -338,7 +344,7 @@ func (s *ReceiptService) ReverseReceipt(ctx context.Context, id common.ID, reaso
 			continue
 		}
 
-		s.invoiceRepo.Update(ctx, invoice)
+		_ = s.invoiceRepo.Update(ctx, invoice)
 	}
 
 	if err := receipt.Reverse(reason, reversedBy); err != nil {
@@ -353,13 +359,16 @@ func (s *ReceiptService) ReverseReceipt(ctx context.Context, id common.ID, reaso
 	if err == nil {
 		newBalance := customer.CurrentBalance.MustAdd(receipt.AppliedAmount)
 		customer.UpdateBalance(newBalance)
-		s.customerRepo.Update(ctx, customer)
+		_ = s.customerRepo.Update(ctx, customer)
 	}
 
-	s.auditLogger.Log(ctx, "ar_receipt", receipt.ID, "receipt.reversed", map[string]any{
+	err = s.auditLogger.Log(ctx, "ar_receipt", receipt.ID, "receipt.reversed", map[string]any{
 		"reason":      reason,
 		"reversed_by": reversedBy.String(),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	s.logger.Info("Receipt reversed",
 		zap.String("receipt_id", id.String()),

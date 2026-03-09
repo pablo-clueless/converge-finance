@@ -148,12 +148,15 @@ func (s *ReportService) GenerateSegmentReport(ctx context.Context, req GenerateS
 
 	report.Data = reportData
 
-	s.auditLogger.Log(ctx, "segment_report", report.ID, "report.generated", map[string]any{
+	err = s.auditLogger.Log(ctx, "segment_report", report.ID, "report.generated", map[string]any{
 		"entity_id":     req.EntityID,
 		"report_number": reportNumber,
 		"segment_type":  req.SegmentType,
 		"segment_count": len(segments),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit action: %w", err)
+	}
 
 	return report, nil
 }
@@ -250,10 +253,13 @@ func (s *ReportService) FinalizeReport(ctx context.Context, id common.ID) (*doma
 		return nil, fmt.Errorf("failed to update report: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_report", id, "report.finalized", map[string]any{
+	err = s.auditLogger.Log(ctx, "segment_report", id, "report.finalized", map[string]any{
 		"entity_id":     report.EntityID,
 		"report_number": report.ReportNumber,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return report, nil
 }
@@ -272,10 +278,13 @@ func (s *ReportService) ApproveReport(ctx context.Context, id common.ID) (*domai
 		return nil, fmt.Errorf("failed to update report: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_report", id, "report.approved", map[string]any{
+	err = s.auditLogger.Log(ctx, "segment_report", id, "report.approved", map[string]any{
 		"entity_id":     report.EntityID,
 		"report_number": report.ReportNumber,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return report, nil
 }
@@ -294,10 +303,13 @@ func (s *ReportService) PublishReport(ctx context.Context, id common.ID) (*domai
 		return nil, fmt.Errorf("failed to update report: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_report", id, "report.published", map[string]any{
+	err = s.auditLogger.Log(ctx, "segment_report", id, "report.published", map[string]any{
 		"entity_id":     report.EntityID,
 		"report_number": report.ReportNumber,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log posted run action: %w", err)
+	}
 
 	return report, nil
 }
@@ -320,10 +332,12 @@ func (s *ReportService) DeleteReport(ctx context.Context, id common.ID) error {
 		return fmt.Errorf("failed to delete report: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "segment_report", id, "report.deleted", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment_report", id, "report.deleted", map[string]any{
 		"entity_id":     report.EntityID,
 		"report_number": report.ReportNumber,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -402,10 +416,12 @@ func (s *ReportService) RegenerateReportData(ctx context.Context, id common.ID) 
 
 	report.Data = reportData
 
-	s.auditLogger.Log(ctx, "segment_report", id, "report.regenerated", map[string]any{
+	if err := s.auditLogger.Log(ctx, "segment_report", id, "report.regenerated", map[string]any{
 		"entity_id":     report.EntityID,
 		"report_number": report.ReportNumber,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return report, nil
 }

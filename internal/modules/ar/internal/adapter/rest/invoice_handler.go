@@ -317,7 +317,7 @@ func (h *InvoiceHandler) Void(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Reason string `json:"reason"`
 	}
-	json.NewDecoder(r.Body).Decode(&req)
+	_ = json.NewDecoder(r.Body).Decode(&req)
 
 	if err := h.invoiceService.VoidInvoice(r.Context(), common.ID(id), req.Reason); err != nil {
 		h.logger.Error("Failed to void invoice", zap.Error(err))

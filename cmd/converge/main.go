@@ -45,7 +45,11 @@ func runServer() {
 		fmt.Printf("Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
-	defer logger.Sync()
+	defer func() {
+		if err = logger.Sync(); err != nil {
+			fmt.Printf("Failed to sync logger: %v\n", err)
+		}
+	}()
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -56,7 +60,12 @@ func runServer() {
 	if err != nil {
 		logger.Fatal("Failed to connect to database", zap.Error(err))
 	}
-	defer db.Close()
+	defer func() {
+		err = db.Close()
+		if err != nil {
+			logger.Fatal("Failed to close database connection", zap.Error(err))
+		}
+	}()
 
 	logger.Info("Connected to database")
 

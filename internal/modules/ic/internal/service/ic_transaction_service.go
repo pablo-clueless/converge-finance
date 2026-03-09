@@ -130,13 +130,16 @@ func (s *ICTransactionService) CreateTransaction(ctx context.Context, req Create
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "created", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "created", map[string]any{
 			"transaction_number": tx.TransactionNumber,
 			"from_entity_id":     tx.FromEntityID,
 			"to_entity_id":       tx.ToEntityID,
 			"amount":             tx.Amount.String(),
 			"transaction_type":   tx.TransactionType,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to log posted run action: %w", err)
+		}
 	}
 
 	return tx, nil
@@ -157,9 +160,12 @@ func (s *ICTransactionService) SubmitTransaction(ctx context.Context, txID commo
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "submitted", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "submitted", map[string]any{
 			"transaction_number": tx.TransactionNumber,
 		})
+		if err != nil {
+			return fmt.Errorf("failed to log posted run action: %w", err)
+		}
 	}
 
 	return nil
@@ -236,11 +242,14 @@ func (s *ICTransactionService) PostTransaction(ctx context.Context, txID common.
 		}
 
 		if s.auditLogger != nil {
-			s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "posted", map[string]any{
+			err = s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "posted", map[string]any{
 				"transaction_number":    tx.TransactionNumber,
 				"from_journal_entry_id": fromJE.ID,
 				"to_journal_entry_id":   toJE.ID,
 			})
+			if err != nil {
+				return fmt.Errorf("failed to log posted run action: %w", err)
+			}
 		}
 
 		return nil
@@ -512,9 +521,12 @@ func (s *ICTransactionService) ReconcileTransaction(ctx context.Context, txID co
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "reconciled", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "reconciled", map[string]any{
 			"transaction_number": tx.TransactionNumber,
 		})
+		if err != nil {
+			return fmt.Errorf("failed to log posted run action: %w", err)
+		}
 	}
 
 	return nil
@@ -535,10 +547,13 @@ func (s *ICTransactionService) DisputeTransaction(ctx context.Context, txID comm
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "disputed", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "disputed", map[string]any{
 			"transaction_number": tx.TransactionNumber,
 			"reason":             reason,
 		})
+		if err != nil {
+			return fmt.Errorf("failed to log posted run action: %w", err)
+		}
 	}
 
 	return nil
@@ -559,9 +574,12 @@ func (s *ICTransactionService) ResolveDispute(ctx context.Context, txID common.I
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "dispute_resolved", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "dispute_resolved", map[string]any{
 			"transaction_number": tx.TransactionNumber,
 		})
+		if err != nil {
+			return fmt.Errorf("failed to log posted run action: %w", err)
+		}
 	}
 
 	return nil
@@ -615,9 +633,12 @@ func (s *ICTransactionService) DeleteTransaction(ctx context.Context, txID commo
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "deleted", map[string]any{
+		err = s.auditLogger.LogAction(ctx, "ic.transaction", tx.ID, "deleted", map[string]any{
 			"transaction_number": tx.TransactionNumber,
 		})
+		if err != nil {
+			return fmt.Errorf("failed to log posted run action: %w", err)
+		}
 	}
 
 	return nil

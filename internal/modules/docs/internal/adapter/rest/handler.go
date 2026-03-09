@@ -97,7 +97,7 @@ func (h *DocumentHandler) Upload(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, http.StatusBadRequest, "file is required")
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	entityID := common.ID(auth.GetEntityIDFromContext(r.Context()))
 	userID := common.ID(auth.GetUserIDFromContext(r.Context()))
@@ -159,7 +159,7 @@ func (h *DocumentHandler) Download(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	w.Header().Set("Content-Type", doc.MimeType)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+doc.OriginalName+"\"")
@@ -499,7 +499,7 @@ func (h *DocumentHandler) CreateVersion(w http.ResponseWriter, r *http.Request) 
 		h.writeError(w, http.StatusBadRequest, "file is required")
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	version, err := h.service.CreateVersion(r.Context(), service.CreateVersionRequest{
 		DocumentID:  documentID,
@@ -578,7 +578,7 @@ func (h *DocumentHandler) DownloadVersion(w http.ResponseWriter, r *http.Request
 		h.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+version.FileName+"\"")

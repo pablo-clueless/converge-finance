@@ -173,7 +173,7 @@ func (e *DepreciationEngine) RunMonthlyDepreciation(
 	}
 
 	if e.auditLogger != nil {
-		e.auditLogger.LogAction(ctx, "fa.depreciation_run", run.ID, "calculated", map[string]any{
+		_ = e.auditLogger.LogAction(ctx, "fa.depreciation_run", run.ID, "calculated", map[string]any{
 			"run_number":         run.RunNumber,
 			"asset_count":        run.AssetCount,
 			"total_depreciation": run.TotalDepreciation.String(),
@@ -239,7 +239,7 @@ func (e *DepreciationEngine) PostDepreciationRun(ctx context.Context, runID comm
 		}
 
 		if e.auditLogger != nil {
-			e.auditLogger.LogAction(ctx, "fa.depreciation_run", run.ID, "posted", map[string]any{
+			_ = e.auditLogger.LogAction(ctx, "fa.depreciation_run", run.ID, "posted", map[string]any{
 				"run_number":       run.RunNumber,
 				"journal_entry_id": journalEntry.ID,
 				"asset_count":      run.AssetCount,
@@ -375,7 +375,7 @@ func (e *DepreciationEngine) ReverseDepreciationRun(ctx context.Context, runID c
 		reversalRun = run
 
 		if e.auditLogger != nil {
-			e.auditLogger.LogAction(ctx, "fa.depreciation_run", run.ID, "reversed", map[string]any{
+			_ = e.auditLogger.LogAction(ctx, "fa.depreciation_run", run.ID, "reversed", map[string]any{
 				"run_number":         run.RunNumber,
 				"asset_count":        run.AssetCount,
 				"total_depreciation": run.TotalDepreciation.String(),

@@ -55,7 +55,7 @@ func (db *PostgresDB) WithEntityContext(ctx context.Context, entityID string, fn
 	if err != nil {
 		return fmt.Errorf("failed to acquire connection: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Set the entity context on this specific connection
 	if _, err := conn.ExecContext(ctx, fmt.Sprintf("SET LOCAL app.current_entity_id = '%s'", entityID)); err != nil {
@@ -75,13 +75,13 @@ func (db *PostgresDB) QueryWithEntity(ctx context.Context, entityID, query strin
 
 	// Set the entity context on this specific connection
 	if _, err := conn.ExecContext(ctx, fmt.Sprintf("SET LOCAL app.current_entity_id = '%s'", entityID)); err != nil {
-		conn.Close()
+		_ = conn.Close()
 		return nil, fmt.Errorf("failed to set entity context: %w", err)
 	}
 
 	rows, err := conn.QueryContext(ctx, query, args...)
 	if err != nil {
-		conn.Close()
+		_ = conn.Close()
 		return nil, err
 	}
 
@@ -95,11 +95,11 @@ func (db *PostgresDB) QueryRowWithEntity(ctx context.Context, entityID, query st
 		return nil, nil, fmt.Errorf("failed to acquire connection: %w", err)
 	}
 
-	cleanup := func() { conn.Close() }
+	cleanup := func() { _ = conn.Close() }
 
 	// Set the entity context on this specific connection
 	if _, err := conn.ExecContext(ctx, fmt.Sprintf("SET LOCAL app.current_entity_id = '%s'", entityID)); err != nil {
-		conn.Close()
+		_ = conn.Close()
 		return nil, nil, fmt.Errorf("failed to set entity context: %w", err)
 	}
 

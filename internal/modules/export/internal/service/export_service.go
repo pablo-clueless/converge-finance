@@ -88,12 +88,14 @@ func (s *ExportService) RequestExport(ctx context.Context, req RequestExportInpu
 		return nil, fmt.Errorf("failed to create export job: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "export_job", job.ID, "requested", map[string]any{
+	if err := s.auditLogger.Log(ctx, "export_job", job.ID, "requested", map[string]any{
 		"entity_id":   req.EntityID,
 		"job_number":  job.JobNumber,
 		"export_type": job.ExportType,
 		"format":      job.Format,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return job, nil
 }
@@ -131,7 +133,7 @@ func (s *ExportService) ProcessJob(ctx context.Context, jobID common.ID, generat
 		if failErr := job.Fail(err.Error()); failErr != nil {
 			s.logger.Error("failed to mark job as failed", zap.Error(failErr))
 		}
-		s.jobRepo.Update(ctx, job)
+		_ = s.jobRepo.Update(ctx, job)
 		return fmt.Errorf("export generation failed: %w", err)
 	}
 
@@ -142,7 +144,7 @@ func (s *ExportService) ProcessJob(ctx context.Context, jobID common.ID, generat
 		if failErr := job.Fail(err.Error()); failErr != nil {
 			s.logger.Error("failed to mark job as failed", zap.Error(failErr))
 		}
-		s.jobRepo.Update(ctx, job)
+		_ = s.jobRepo.Update(ctx, job)
 		return fmt.Errorf("failed to create export directory: %w", err)
 	}
 
@@ -151,17 +153,17 @@ func (s *ExportService) ProcessJob(ctx context.Context, jobID common.ID, generat
 		if failErr := job.Fail(err.Error()); failErr != nil {
 			s.logger.Error("failed to mark job as failed", zap.Error(failErr))
 		}
-		s.jobRepo.Update(ctx, job)
+		_ = s.jobRepo.Update(ctx, job)
 		return fmt.Errorf("failed to create export file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	written, err := io.Copy(file, result.Data)
 	if err != nil {
 		if failErr := job.Fail(err.Error()); failErr != nil {
 			s.logger.Error("failed to mark job as failed", zap.Error(failErr))
 		}
-		s.jobRepo.Update(ctx, job)
+		_ = s.jobRepo.Update(ctx, job)
 		return fmt.Errorf("failed to write export file: %w", err)
 	}
 
@@ -173,12 +175,14 @@ func (s *ExportService) ProcessJob(ctx context.Context, jobID common.ID, generat
 		return fmt.Errorf("failed to update job: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "export_job", job.ID, "completed", map[string]any{
+	if err := s.auditLogger.Log(ctx, "export_job", job.ID, "completed", map[string]any{
 		"entity_id":  job.EntityID,
 		"job_number": job.JobNumber,
 		"file_size":  written,
 		"row_count":  result.RowCount,
-	})
+	}); err != nil {
+		return fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return nil
 }
@@ -250,13 +254,15 @@ func (s *ExportService) CreateTemplate(ctx context.Context, req CreateTemplateIn
 		return nil, fmt.Errorf("failed to create template: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "export_template", template.ID, "created", map[string]any{
+	if err := s.auditLogger.Log(ctx, "export_template", template.ID, "created", map[string]any{
 		"entity_id":     req.EntityID,
 		"template_code": template.TemplateCode,
 		"template_name": template.TemplateName,
 		"module":        template.Module,
 		"export_type":   template.ExportType,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return template, nil
 }
@@ -352,13 +358,16 @@ func (s *ExportService) CreateSchedule(ctx context.Context, req CreateScheduleIn
 		return nil, fmt.Errorf("failed to create schedule: %w", err)
 	}
 
-	s.auditLogger.Log(ctx, "export_schedule", schedule.ID, "created", map[string]any{
+	err = s.auditLogger.Log(ctx, "export_schedule", schedule.ID, "created", map[string]any{
 		"entity_id":       req.EntityID,
 		"created_by":      req.CreatedBy,
 		"schedule_name":   schedule.ScheduleName,
 		"template_id":     schedule.TemplateID,
 		"cron_expression": schedule.CronExpression,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log audit event: %w", err)
+	}
 
 	return schedule, nil
 }

@@ -54,7 +54,7 @@ func (s *CostCenterService) CreateCostCenter(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.cost_center", center.ID, "created", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "cost.cost_center", center.ID, "created", map[string]any{
 			"code":        center.Code,
 			"name":        center.Name,
 			"center_type": center.CenterType,
@@ -105,7 +105,7 @@ func (s *CostCenterService) UpdateCostCenter(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.cost_center", center.ID, "updated", nil)
+		_ = s.auditLogger.LogAction(ctx, "cost.cost_center", center.ID, "updated", nil)
 	}
 
 	return center, nil
@@ -152,7 +152,7 @@ func (s *CostCenterService) DeactivateCostCenter(ctx context.Context, id common.
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "cost.cost_center", id, "deactivated", nil)
+		_ = s.auditLogger.LogAction(ctx, "cost.cost_center", id, "deactivated", nil)
 	}
 
 	return nil
