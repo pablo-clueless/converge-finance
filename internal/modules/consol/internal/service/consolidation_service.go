@@ -161,7 +161,7 @@ func (s *ConsolidationService) InitiateConsolidationRun(
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "consol.run", run.ID, "initiated", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "consol.run", run.ID, "initiated", map[string]any{
 			"run_number":         run.RunNumber,
 			"set_id":             setID,
 			"fiscal_period_id":   fiscalPeriodID,
@@ -239,7 +239,7 @@ func (s *ConsolidationService) ExecuteConsolidation(ctx context.Context, runID c
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "consol.run", run.ID, "completed", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "consol.run", run.ID, "completed", map[string]any{
 			"entity_count": run.EntityCount,
 			"total_assets": run.TotalAssets,
 			"net_income":   run.NetIncome,
@@ -535,7 +535,7 @@ func (s *ConsolidationService) PostConsolidation(ctx context.Context, runID comm
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "consol.run", run.ID, "posted", map[string]any{
+		_ = s.auditLogger.LogAction(ctx, "consol.run", run.ID, "posted", map[string]any{
 			"journal_entry_id": je.ID,
 		})
 	}
