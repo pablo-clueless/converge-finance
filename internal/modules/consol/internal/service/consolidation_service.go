@@ -570,7 +570,7 @@ func (s *ConsolidationService) ReverseConsolidation(ctx context.Context, runID c
 	}
 
 	if s.auditLogger != nil {
-		s.auditLogger.LogAction(ctx, "consol.run", run.ID, "reversed", nil)
+		_ = s.auditLogger.LogAction(ctx, "consol.run", run.ID, "reversed", nil)
 	}
 
 	return nil
